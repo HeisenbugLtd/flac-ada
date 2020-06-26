@@ -15,15 +15,14 @@ pragma License (Unrestricted);
 --  Defines basic types used in decoding/encoding FLAC files.
 ------------------------------------------------------------------------------
 
-with System.Storage_Elements;
+with Ada.Streams;
 
 private package Flac.Types with
   Pure       => True,
   SPARK_Mode => On
 is
 
-   package SSE renames System.Storage_Elements;
-   use type SSE.Storage_Offset;
+   use type Ada.Streams.Stream_Element_Offset;
 
    --  Basic types.
 
@@ -77,18 +76,21 @@ is
                        Vorbis_Comment,
                        Cue_Sheet,
                        Picture,
-                       Reserved,
+                       Reserved_7,
+                       --  And everything inbetween.
+                       Reserved_126,
                        Invalid);
-   for Block_Type use (Stream_Info => 0,
-                       Padding     => 1,
-                       Application => 2,
-                       Seek_Table  => 3,
+   for Block_Type use (Stream_Info    => 0,
+                       Padding        => 1,
+                       Application    => 2,
+                       Seek_Table     => 3,
                        Vorbis_Comment => 4,
                        Cue_Sheet      => 5,
                        Picture        => 6,
-                       Reserved       => 7,
+                       Reserved_7     => 7,
+                       Reserved_126   => 126,
                        Invalid        => 127);
 
-   subtype MD5_Sum is SSE.Storage_Array (0 .. 128 / 8 - 1);
+   subtype MD5_Sum is Ada.Streams.Stream_Element_Array (0 .. 128 / 8 - 1);
 
 end Flac.Types;
