@@ -142,23 +142,26 @@ is
       use type Ada.Streams.Stream_Element_Array;
       use type Ada.Streams.Stream_Element_Offset;
    begin
+      Flac_File.Valid := True;
+
       --  Assume successful operation.
       IO_Wrapper.Open (File  => Flac_File.File,
                        Name  => File,
                        Error => Flac_File.Error);
 
       if Flac_File.Error = None then
+         Flac_File.Open := True; --  For precondition of "Close" below.
          IO_Wrapper.Read (File => Flac_File.File,
                           Item => Header,
                           Last => Last);
 
          if Last /= 4 or else Header /= Flac.Headers.Stream then
             Flac_File.Error := Not_A_Flac_File;
+            Close (Flac_File => Flac_File);
          end if;
       end if;
 
-      Flac_File.Open := Flac_File.Error in None | Not_A_Flac_File;
-      Flac_File.Valid := True;
+      Flac_File.Open := Flac_File.Error = None;
    end Open;
 
 end Flac.Reader;

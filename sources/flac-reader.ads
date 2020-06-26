@@ -45,9 +45,9 @@ is
      Pre  => not Is_Open (Handle => Flac_File),
      Post => (Is_Valid (Handle => Flac_File) and then
                   (case Get_Error (Flac_File) is
-                         when None | Not_A_Flac_File =>
+                         when None =>
                            Is_Open (Handle => Flac_File),
-                         when Open_Error =>
+                         when Open_Error | Not_A_Flac_File =>
                            not Is_Open (Handle => Flac_File)));
    --  Opens a given file in FLAC format. Errors will be communicated via the
    --  returned File_Type.

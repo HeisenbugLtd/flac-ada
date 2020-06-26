@@ -39,7 +39,6 @@ begin
        (Flac.Reader.Get_Error (Handle => Test_File) = Flac.Reader.Not_A_Flac_File);
    --  Expected result is an external dependency outside of SPARK.
 
-   Flac.Reader.Close (Flac_File => Test_File);
    Flac.Reader.Open (File      => "Unnamed.flac",
                      Flac_File => Test_File);
 
