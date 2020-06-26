@@ -44,44 +44,44 @@
 		<br>
 		<a name="toc"><font size="+1"><b><u>Table of Contents</u></b></font></a>
 		<ul>
-			<li><a href="https://xiph.org/flac/format.html#acknowledgments">Acknowledgments</a></li>
-			<li><a href="https://xiph.org/flac/format.html#scope">Scope</a></li>
-			<li><a href="https://xiph.org/flac/format.html#architecture">Architecture</a></li>
-			<li><a href="https://xiph.org/flac/format.html#definitions">Definitions</a></li>
-			<li><a href="https://xiph.org/flac/format.html#blocking">Blocking</a></li>
-			<li><a href="https://xiph.org/flac/format.html#interchannel">Interchannel Decorrelation</a></li>
-			<li><a href="https://xiph.org/flac/format.html#prediction">Prediction</a></li>
-			<li><a href="https://xiph.org/flac/format.html#residualcoding">Residual Coding</a></li>
-			<li><a href="https://xiph.org/flac/format.html#format_overview">Format</a></li>
-			<li><a href="https://xiph.org/flac/format.html#subset">FLAC Subset</a></li>
+			<li><a href="#acknowledgments">Acknowledgments</a></li>
+			<li><a href="#scope">Scope</a></li>
+			<li><a href="#architecture">Architecture</a></li>
+			<li><a href="#definitions">Definitions</a></li>
+			<li><a href="#blocking">Blocking</a></li>
+			<li><a href="#interchannel">Interchannel Decorrelation</a></li>
+			<li><a href="#prediction">Prediction</a></li>
+			<li><a href="#residualcoding">Residual Coding</a></li>
+			<li><a href="#format_overview">Format</a></li>
+			<li><a href="#subset">FLAC Subset</a></li>
 			<li>Specification
 				<ul>
-					<li><a href="https://xiph.org/flac/format.html#stream">STREAM</a>
+					<li><a href="#stream">STREAM</a>
 						<ul>
-							<li><a href="https://xiph.org/flac/format.html#metadata_block">METADATA_BLOCK</a>
+							<li><a href="#metadata_block">METADATA_BLOCK</a>
 								<ul>
-									<li><a href="https://xiph.org/flac/format.html#metadata_block_header">METADATA_BLOCK_HEADER</a></li>
-									<li><a href="https://xiph.org/flac/format.html#metadata_block_data">METADATA_BLOCK_DATA</a>
+									<li><a href="#metadata_block_header">METADATA_BLOCK_HEADER</a></li>
+									<li><a href="#metadata_block_data">METADATA_BLOCK_DATA</a>
 										<ul>
-											<li><a href="https://xiph.org/flac/format.html#metadata_block_streaminfo">METADATA_BLOCK_STREAMINFO</a></li>
-											<li><a href="https://xiph.org/flac/format.html#metadata_block_padding">METADATA_BLOCK_PADDING</a></li>
-											<li><a href="https://xiph.org/flac/format.html#metadata_block_application">METADATA_BLOCK_APPLICATION</a></li>
-											<li><a href="https://xiph.org/flac/format.html#metadata_block_seektable">METADATA_BLOCK_SEEKTABLE</a>
+											<li><a href="#metadata_block_streaminfo">METADATA_BLOCK_STREAMINFO</a></li>
+											<li><a href="#metadata_block_padding">METADATA_BLOCK_PADDING</a></li>
+											<li><a href="#metadata_block_application">METADATA_BLOCK_APPLICATION</a></li>
+											<li><a href="#metadata_block_seektable">METADATA_BLOCK_SEEKTABLE</a>
 												<ul>
-													<li><a href="https://xiph.org/flac/format.html#seekpoint">SEEKPOINT</a></li>
+													<li><a href="#seekpoint">SEEKPOINT</a></li>
 												</ul>
 											</li>
-											<li><a href="https://xiph.org/flac/format.html#metadata_block_vorbis_comment">METADATA_BLOCK_VORBIS_COMMENT</a></li>
-											<li><a href="https://xiph.org/flac/format.html#metadata_block_cuesheet">METADATA_BLOCK_CUESHEET</a>
+											<li><a href="#metadata_block_vorbis_comment">METADATA_BLOCK_VORBIS_COMMENT</a></li>
+											<li><a href="#metadata_block_cuesheet">METADATA_BLOCK_CUESHEET</a>
 												<ul>
-													<li><a href="https://xiph.org/flac/format.html#cuesheet_track">CUESHEET_TRACK</a>
+													<li><a href="#cuesheet_track">CUESHEET_TRACK</a>
 														<ul>
-															<li><a href="https://xiph.org/flac/format.html#cuesheet_track_index">CUESHEET_TRACK_INDEX</a></li>
+															<li><a href="#cuesheet_track_index">CUESHEET_TRACK_INDEX</a></li>
 														</ul>
 													</li>
 												</ul>
 											</li>
-											<li><a href="https://xiph.org/flac/format.html#metadata_block_picture">METADATA_BLOCK_PICTURE</a></li>
+											<li><a href="#metadata_block_picture">METADATA_BLOCK_PICTURE</a></li>
 										</ul>
 									</li>
 								</ul>
@@ -90,28 +90,28 @@
 					</li>
 					<li>
 						<ul>
-							<li><a href="https://xiph.org/flac/format.html#frame">FRAME</a>
+							<li><a href="#frame">FRAME</a>
 								<ul>
-									<li><a href="https://xiph.org/flac/format.html#frame_header">FRAME_HEADER</a></li>
-									<li><a href="https://xiph.org/flac/format.html#frame_footer">FRAME_FOOTER</a></li>
-									<li><a href="https://xiph.org/flac/format.html#subframe">SUBFRAME</a>
+									<li><a href="#frame_header">FRAME_HEADER</a></li>
+									<li><a href="#frame_footer">FRAME_FOOTER</a></li>
+									<li><a href="#subframe">SUBFRAME</a>
 										<ul>
-											<li><a href="https://xiph.org/flac/format.html#subframe_header">SUBFRAME_HEADER</a></li>
-											<li><a href="https://xiph.org/flac/format.html#subframe_constant">SUBFRAME_CONSTANT</a></li>
-											<li><a href="https://xiph.org/flac/format.html#subframe_fixed">SUBFRAME_FIXED</a></li>
-											<li><a href="https://xiph.org/flac/format.html#subframe_lpc">SUBFRAME_LPC</a></li>
-											<li><a href="https://xiph.org/flac/format.html#subframe_verbatim">SUBFRAME_VERBATIM</a>
+											<li><a href="#subframe_header">SUBFRAME_HEADER</a></li>
+											<li><a href="#subframe_constant">SUBFRAME_CONSTANT</a></li>
+											<li><a href="#subframe_fixed">SUBFRAME_FIXED</a></li>
+											<li><a href="#subframe_lpc">SUBFRAME_LPC</a></li>
+											<li><a href="#subframe_verbatim">SUBFRAME_VERBATIM</a>
 												<ul>
-													<li><a href="https://xiph.org/flac/format.html#residual">RESIDUAL</a>
+													<li><a href="#residual">RESIDUAL</a>
 														<ul>
-															<li><a href="https://xiph.org/flac/format.html#partitioned_rice">RESIDUAL_CODING_METHOD_PARTITIONED_RICE</a>
+															<li><a href="#partitioned_rice">RESIDUAL_CODING_METHOD_PARTITIONED_RICE</a>
 																<ul>
-																	<li><a href="https://xiph.org/flac/format.html#rice_partition">RICE_PARTITION</a></li>
+																	<li><a href="#rice_partition">RICE_PARTITION</a></li>
 																</ul>
 															</li>
-															<li><a href="https://xiph.org/flac/format.html#partitioned_rice2">RESIDUAL_CODING_METHOD_PARTITIONED_RICE2</a>
+															<li><a href="#partitioned_rice2">RESIDUAL_CODING_METHOD_PARTITIONED_RICE2</a>
 																<ul>
-																	<li><a href="https://xiph.org/flac/format.html#rice2_partition">RICE2_PARTITION</a></li>
+																	<li><a href="#rice2_partition">RICE2_PARTITION</a></li>
 																</ul>
 															</li>
 														</ul>
@@ -155,16 +155,16 @@
 		Similar to many audio coders, a FLAC encoder has the following stages:
 		<ul>
 			<li>
-				<a href="https://xiph.org/flac/format.html#blocking">Blocking</a>.  The input is broken up into many contiguous blocks.  With FLAC, the blocks may vary in size.  The optimal size of the block is usually affected by many factors, including the sample rate, spectral characteristics over time, etc.  Though FLAC allows the block size to vary within a stream, the reference encoder uses a fixed block size.
+				<a href="#blocking">Blocking</a>.  The input is broken up into many contiguous blocks.  With FLAC, the blocks may vary in size.  The optimal size of the block is usually affected by many factors, including the sample rate, spectral characteristics over time, etc.  Though FLAC allows the block size to vary within a stream, the reference encoder uses a fixed block size.
 			</li>
 			<li>
-				<a href="https://xiph.org/flac/format.html#interchannel">Interchannel Decorrelation</a>.  In the case of stereo streams, the encoder will create mid and side signals based on the average and difference (respectively) of the left and right channels.  The encoder will then pass the best form of the signal to the next stage.
+				<a href="#interchannel">Interchannel Decorrelation</a>.  In the case of stereo streams, the encoder will create mid and side signals based on the average and difference (respectively) of the left and right channels.  The encoder will then pass the best form of the signal to the next stage.
 			</li>
 			<li>
-				<a href="https://xiph.org/flac/format.html#prediction">Prediction</a>.  The block is passed through a prediction stage where the encoder tries to find a mathematical description (usually an approximate one) of the signal.  This description is typically much smaller than the raw signal itself.  Since the methods of prediction are known to both the encoder and decoder, only the parameters of the predictor need be included in the compressed stream.  FLAC currently uses four different classes of predictors (described in the <a href="https://xiph.org/flac/format.html#prediction">prediction</a> section), but the format has reserved space for additional methods.  FLAC allows the class of predictor to change from block to block, or even within the channels of a block.
+				<a href="#prediction">Prediction</a>.  The block is passed through a prediction stage where the encoder tries to find a mathematical description (usually an approximate one) of the signal.  This description is typically much smaller than the raw signal itself.  Since the methods of prediction are known to both the encoder and decoder, only the parameters of the predictor need be included in the compressed stream.  FLAC currently uses four different classes of predictors (described in the <a href="#prediction">prediction</a> section), but the format has reserved space for additional methods.  FLAC allows the class of predictor to change from block to block, or even within the channels of a block.
 			</li>
 			<li>
-				<a href="https://xiph.org/flac/format.html#residualcoding">Residual coding</a>.  If the predictor does not describe the signal exactly, the difference between the original signal and the predicted signal (called the error or residual signal) must be coded losslessy.  If the predictor is effective, the residual signal will require fewer bits per sample than the original signal.  FLAC currently uses only one method for encoding the residual (see the <a href="https://xiph.org/flac/format.html#residualcoding">Residual coding</a> section), but the format has reserved space for additional methods.  FLAC allows the residual coding method to change from block to block, or even within the channels of a block.
+				<a href="#residualcoding">Residual coding</a>.  If the predictor does not describe the signal exactly, the difference between the original signal and the predicted signal (called the error or residual signal) must be coded losslessy.  If the predictor is effective, the residual signal will require fewer bits per sample than the original signal.  FLAC currently uses only one method for encoding the residual (see the <a href="#residualcoding">Residual coding</a> section), but the format has reserved space for additional methods.  FLAC allows the residual coding method to change from block to block, or even within the channels of a block.
 			</li>
 		</ul>
 		In addition, FLAC specifies a metadata system, which allows arbitrary information about the stream to be included at the beginning of the stream.<br>
@@ -278,19 +278,19 @@
 				<a name="subset">FLAC</a> specifies a subset of itself as the Subset format.  The purpose of this is to ensure that any streams encoded according to the Subset are truly "streamable", meaning that a decoder that cannot seek within the stream can still pick up in the middle of the stream and start decoding.  It also makes hardware decoder implementations more practical by limiting the encoding parameters such that decoder buffer sizes and other resource requirements can be easily determined.  <span class="commandname">flac</span> generates Subset streams by default unless the "--lax" command-line option is used.  The Subset makes the following limitations on what may be used in the stream:
 				<ul>
 				<li>
-					The blocksize bits in the <a href="https://xiph.org/flac/format.html#frame_header">frame header</a> must be 0001-1110.  The blocksize must be &lt;=16384; if the sample rate is &lt;= 48000Hz, the blocksize must be &lt;=4608.
+					The blocksize bits in the <a href="#frame_header">frame header</a> must be 0001-1110.  The blocksize must be &lt;=16384; if the sample rate is &lt;= 48000Hz, the blocksize must be &lt;=4608.
 				</li>
 				<li>
-					The sample rate bits in the <a href="https://xiph.org/flac/format.html#frame_header">frame header</a> must be 0001-1110.
+					The sample rate bits in the <a href="#frame_header">frame header</a> must be 0001-1110.
 				</li>
 				<li>
-					The bits-per-sample bits in the <a href="https://xiph.org/flac/format.html#frame_header">frame header</a> must be 001-111.
+					The bits-per-sample bits in the <a href="#frame_header">frame header</a> must be 001-111.
 				</li>
 				<li>
-					If the sample rate is &lt;= 48000Hz, the filter order in <a href="https://xiph.org/flac/format.html#subframe_lpc">LPC subframes</a> must be less than or equal to 12, i.e. the subframe type bits in the <a href="https://xiph.org/flac/format.html#subframe_header">subframe header</a> may not be 101100-111111.
+					If the sample rate is &lt;= 48000Hz, the filter order in <a href="#subframe_lpc">LPC subframes</a> must be less than or equal to 12, i.e. the subframe type bits in the <a href="#subframe_header">subframe header</a> may not be 101100-111111.
 				</li>
 				<li>
-					The Rice partition order in a <a href="https://xiph.org/flac/format.html#partitioned_rice">Rice-coded residual section</a> must be less than or equal to 8.
+					The Rice partition order in a <a href="#partitioned_rice">Rice-coded residual section</a> must be less than or equal to 8.
 				</li>
 				</ul>
 			</li>
@@ -321,7 +321,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#metadata_block_streaminfo"><i>METADATA_BLOCK</i></a>
+				<a href="#metadata_block_streaminfo"><i>METADATA_BLOCK</i></a>
 			</td>
 			<td>
 				This is the mandatory STREAMINFO metadata block that has the basic properties of the stream
@@ -329,7 +329,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#metadata_block"><i>METADATA_BLOCK</i></a>*
+				<a href="#metadata_block"><i>METADATA_BLOCK</i></a>*
 			</td>
 			<td>
 				Zero or more metadata blocks
@@ -337,7 +337,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#frame"><i>FRAME</i></a>+
+				<a href="#frame"><i>FRAME</i></a>+
 			</td>
 			<td>
 				One or more audio frames
@@ -359,7 +359,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#metadata_block_header"><i>METADATA_BLOCK_HEADER</i></a>
+				<a href="#metadata_block_header"><i>METADATA_BLOCK_HEADER</i></a>
 			</td>
 			<td>
 				A block header that specifies the type and size of the metadata block data.
@@ -367,7 +367,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#metadata_block_data"><i>METADATA_BLOCK_DATA</i></a>
+				<a href="#metadata_block_data"><i>METADATA_BLOCK_DATA</i></a>
 			</td>
 			<td>
 				&nbsp;
@@ -456,13 +456,13 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#metadata_block_streaminfo"><i>METADATA_BLOCK_STREAMINFO</i></a><br>
-				|| <a href="https://xiph.org/flac/format.html#metadata_block_padding"><i>METADATA_BLOCK_PADDING</i></a><br>
-				|| <a href="https://xiph.org/flac/format.html#metadata_block_application"><i>METADATA_BLOCK_APPLICATION</i></a><br>
-				|| <a href="https://xiph.org/flac/format.html#metadata_block_seektable"><i>METADATA_BLOCK_SEEKTABLE</i></a><br>
-				|| <a href="https://xiph.org/flac/format.html#metadata_block_vorbis_comment"><i>METADATA_BLOCK_VORBIS_COMMENT</i></a><br>
-				|| <a href="https://xiph.org/flac/format.html#metadata_block_cuesheet"><i>METADATA_BLOCK_CUESHEET</i></a><br>
-				|| <a href="https://xiph.org/flac/format.html#metadata_block_picture"><i>METADATA_BLOCK_PICTURE</i></a>
+				<a href="#metadata_block_streaminfo"><i>METADATA_BLOCK_STREAMINFO</i></a><br>
+				|| <a href="#metadata_block_padding"><i>METADATA_BLOCK_PADDING</i></a><br>
+				|| <a href="#metadata_block_application"><i>METADATA_BLOCK_APPLICATION</i></a><br>
+				|| <a href="#metadata_block_seektable"><i>METADATA_BLOCK_SEEKTABLE</i></a><br>
+				|| <a href="#metadata_block_vorbis_comment"><i>METADATA_BLOCK_VORBIS_COMMENT</i></a><br>
+				|| <a href="#metadata_block_cuesheet"><i>METADATA_BLOCK_CUESHEET</i></a><br>
+				|| <a href="#metadata_block_picture"><i>METADATA_BLOCK_PICTURE</i></a>
 			</td>
 			<td>
 				The block data must match the block type in the block header.
@@ -634,7 +634,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#seekpoint"><i>SEEKPOINT</i></a>+
+				<a href="#seekpoint"><i>SEEKPOINT</i></a>+
 			</td>
 			<td>
 				One or more seek points.
@@ -789,7 +789,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#cuesheet_track"><i>CUESHEET_TRACK</i></a>+
+				<a href="#cuesheet_track"><i>CUESHEET_TRACK</i></a>+
 			</td>
 			<td>
 				One or more tracks.  A CUESHEET block is required to have a lead-out track; it is always the last track in the CUESHEET.  For CD-DA, the lead-out track number must be 170 as specified by the Red Book, otherwise is must be 255.
@@ -867,7 +867,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#cuesheet_track_index"><i>CUESHEET_TRACK_INDEX</i></a>+
+				<a href="#cuesheet_track_index"><i>CUESHEET_TRACK_INDEX</i></a>+
 			</td>
 			<td>
 				For all tracks except the lead-out track, one or more track index points.
@@ -1053,7 +1053,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#frame_header"><i>FRAME_HEADER</i></a>
+				<a href="#frame_header"><i>FRAME_HEADER</i></a>
 			</td>
 			<td>
 				&nbsp;
@@ -1061,7 +1061,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#subframe"><i>SUBFRAME</i></a>+
+				<a href="#subframe"><i>SUBFRAME</i></a>+
 			</td>
 			<td>
 				One SUBFRAME per channel.
@@ -1077,7 +1077,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#frame_footer"><i>FRAME_FOOTER</i></a>
+				<a href="#frame_footer"><i>FRAME_FOOTER</i></a>
 			</td>
 			<td>
 				&nbsp;
@@ -1110,7 +1110,7 @@
 				&lt;1&gt;
 			</td>
 			<td>
-				Reserved: <a href="https://xiph.org/flac/format.html#frame_header_notes">[1]</a><br>
+				Reserved: <a href="#frame_header_notes">[1]</a><br>
 				<ul>
 				<li>
 					<tt>0</tt> : mandatory value
@@ -1126,7 +1126,7 @@
 				&lt;1&gt;
 			</td>
 			<td>
-				Blocking strategy: <a href="https://xiph.org/flac/format.html#frame_header_notes">[2]</a> <a href="https://xiph.org/flac/format.html#frame_header_notes">[3]</a><br>
+				Blocking strategy: <a href="#frame_header_notes">[2]</a> <a href="#frame_header_notes">[3]</a><br>
 				<ul>
 				<li>
 					<tt>0</tt> : fixed-blocksize stream; frame header encodes the frame number
@@ -1314,9 +1314,9 @@
 			</td>
 			<td>
 				if(variable blocksize)<br>
-				&nbsp;&nbsp;&nbsp;&lt;8-56&gt;:"UTF-8" coded sample number (decoded number is 36 bits) <a href="https://xiph.org/flac/format.html#frame_header_notes">[4]</a><br>
+				&nbsp;&nbsp;&nbsp;&lt;8-56&gt;:"UTF-8" coded sample number (decoded number is 36 bits) <a href="#frame_header_notes">[4]</a><br>
 				else<br>
-				&nbsp;&nbsp;&nbsp;&lt;8-48&gt;:"UTF-8" coded frame number (decoded number is 31 bits) <a href="https://xiph.org/flac/format.html#frame_header_notes">[4]</a>
+				&nbsp;&nbsp;&nbsp;&lt;8-48&gt;:"UTF-8" coded frame number (decoded number is 31 bits) <a href="#frame_header_notes">[4]</a>
 			</td>
 		</tr>
 		<tr>
@@ -1404,7 +1404,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#subframe_header"><i>SUBFRAME_HEADER</i></a>
+				<a href="#subframe_header"><i>SUBFRAME_HEADER</i></a>
 			</td>
 			<td>
 				&nbsp;
@@ -1412,7 +1412,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#subframe_constant"><i>SUBFRAME_CONSTANT</i></a><br>|| <a href="https://xiph.org/flac/format.html#subframe_fixed"><i>SUBFRAME_FIXED</i></a><br>|| <a href="https://xiph.org/flac/format.html#subframe_lpc"><i>SUBFRAME_LPC</i></a><br>|| <a href="https://xiph.org/flac/format.html#subframe_verbatim"><i>SUBFRAME_VERBATIM</i></a>
+				<a href="#subframe_constant"><i>SUBFRAME_CONSTANT</i></a><br>|| <a href="#subframe_fixed"><i>SUBFRAME_FIXED</i></a><br>|| <a href="#subframe_lpc"><i>SUBFRAME_LPC</i></a><br>|| <a href="#subframe_verbatim"><i>SUBFRAME_VERBATIM</i></a>
 			</td>
 			<td valign="top">
 				The SUBFRAME_HEADER specifies which one.
@@ -1448,10 +1448,10 @@
 				Subframe type:
 				<ul>
 				<li>
-					<tt>000000</tt> : <a href="https://xiph.org/flac/format.html#subframe_constant">SUBFRAME_CONSTANT</a>
+					<tt>000000</tt> : <a href="#subframe_constant">SUBFRAME_CONSTANT</a>
 				</li>
 				<li>
-					<tt>000001</tt> : <a href="https://xiph.org/flac/format.html#subframe_verbatim">SUBFRAME_VERBATIM</a>
+					<tt>000001</tt> : <a href="#subframe_verbatim">SUBFRAME_VERBATIM</a>
 				</li>
 				<li>
 					<tt>00001x</tt> : reserved
@@ -1460,13 +1460,13 @@
 					<tt>0001xx</tt> : reserved
 				</li>
 				<li>
-					<tt>001xxx</tt> : if(xxx &lt;= 4) <a href="https://xiph.org/flac/format.html#subframe_fixed">SUBFRAME_FIXED</a>, xxx=order ; else reserved
+					<tt>001xxx</tt> : if(xxx &lt;= 4) <a href="#subframe_fixed">SUBFRAME_FIXED</a>, xxx=order ; else reserved
 				</li>
 				<li>
 					<tt>01xxxx</tt> : reserved
 				</li>
 				<li>
-					<tt>1xxxxx</tt> : <a href="https://xiph.org/flac/format.html#subframe_lpc">SUBFRAME_LPC</a>, xxxxx=order-1
+					<tt>1xxxxx</tt> : <a href="#subframe_lpc">SUBFRAME_LPC</a>, xxxxx=order-1
 				</li>
 				</ul>
 			</td>
@@ -1533,7 +1533,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#residual"><i>RESIDUAL</i></a>
+				<a href="#residual"><i>RESIDUAL</i></a>
 			</td>
 			<td>
 				Encoded residual
@@ -1587,7 +1587,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#residual"><i>RESIDUAL</i></a>
+				<a href="#residual"><i>RESIDUAL</i></a>
 			</td>
 			<td>
 				Encoded residual
@@ -1650,8 +1650,8 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#partitioned_rice"><i>RESIDUAL_CODING_METHOD_PARTITIONED_RICE</i></a>&nbsp;||<br>
-				<a href="https://xiph.org/flac/format.html#partitioned_rice2"><i>RESIDUAL_CODING_METHOD_PARTITIONED_RICE2</i></a>
+				<a href="#partitioned_rice"><i>RESIDUAL_CODING_METHOD_PARTITIONED_RICE</i></a>&nbsp;||<br>
+				<a href="#partitioned_rice2"><i>RESIDUAL_CODING_METHOD_PARTITIONED_RICE2</i></a>
 			</td>
 			<td>
 				&nbsp;
@@ -1681,7 +1681,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#rice_partition"><i>RICE_PARTITION</i></a>+
+				<a href="#rice_partition"><i>RICE_PARTITION</i></a>+
 			</td>
 			<td>
 				There will be 2^order partitions.
@@ -1760,7 +1760,7 @@
 		</tr>
 		<tr>
 			<td align="right" valign="top" bgcolor="#F4F4CC">
-				<a href="https://xiph.org/flac/format.html#rice2_partition"><i>RICE2_PARTITION</i></a>+
+				<a href="#rice2_partition"><i>RICE2_PARTITION</i></a>+
 			</td>
 			<td>
 				There will be 2^order partitions.
