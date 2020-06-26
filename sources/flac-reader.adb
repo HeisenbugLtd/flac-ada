@@ -1,3 +1,12 @@
+------------------------------------------------------------------------------
+--  Copyright (C) 2020 by Heisenbug Ltd. (gh+flacada@heisenbug.eu)
+--
+--  This work is free. You can redistribute it and/or modify it under the
+--  terms of the Do What The Fuck You Want To Public License, Version 2,
+--  as published by Sam Hocevar. See the LICENSE file for more details.
+------------------------------------------------------------------------------
+pragma License (Unrestricted);
+
 with Ada.Streams.Stream_IO;
 with Flac.Headers;
 
@@ -10,10 +19,17 @@ is
    package IO_Wrapper with
      SPARK_Mode => On
    is
-      function Is_Open (File : in Ada.Streams.Stream_IO.File_Type) return Boolean
+      ------------------------------------------------------------------------
+      --  Is_Open
+      ------------------------------------------------------------------------
+      function Is_Open
+        (File : in Ada.Streams.Stream_IO.File_Type) return Boolean
         with
           Ghost => True;
 
+      ------------------------------------------------------------------------
+      --  Open
+      ------------------------------------------------------------------------
       procedure Open (File  :    out Ada.Streams.Stream_IO.File_Type;
                       Name  : in     String;
                       Error :    out Error_Type)
@@ -22,11 +38,17 @@ is
           Depends => (File  => Name,
                       Error => Name);
 
+      ------------------------------------------------------------------------
+      --  Close
+      ------------------------------------------------------------------------
       procedure Close (File : in out Ada.Streams.Stream_IO.File_Type)
         with
           Post    => (not Is_Open (File => File)),
           Depends => (File  => File);
 
+      ------------------------------------------------------------------------
+      --  Read
+      ------------------------------------------------------------------------
       procedure Read (File : in     Ada.Streams.Stream_IO.File_Type;
                       Item :    out Ada.Streams.Stream_Element_Array;
                       Last :    out Ada.Streams.Stream_Element_Count)
@@ -42,7 +64,11 @@ is
      SPARK_Mode => On
    is
 
-      function Is_Open (File : in Ada.Streams.Stream_IO.File_Type) return Boolean
+      ------------------------------------------------------------------------
+      --  Is_Open
+      ------------------------------------------------------------------------
+      function Is_Open
+        (File : in Ada.Streams.Stream_IO.File_Type) return Boolean
         with
           SPARK_Mode => Off
       is
@@ -52,6 +78,9 @@ is
          return Ada.Streams.Stream_IO.Is_Open (File => File);
       end Is_Open;
 
+      ------------------------------------------------------------------------
+      --  Open
+      ------------------------------------------------------------------------
       procedure Open (File  :    out Ada.Streams.Stream_IO.File_Type;
                       Name  : in     String;
                       Error :    out Error_Type)
@@ -67,6 +96,9 @@ is
             Error := Open_Error;
       end Open;
 
+      ------------------------------------------------------------------------
+      --  Close
+      ------------------------------------------------------------------------
       procedure Close (File : in out Ada.Streams.Stream_IO.File_Type)
         with
           SPARK_Mode => Off is
@@ -74,6 +106,9 @@ is
          Ada.Streams.Stream_IO.Close (File => File);
       end Close;
 
+      ------------------------------------------------------------------------
+      --  Read
+      ------------------------------------------------------------------------
       procedure Read (File : in     Ada.Streams.Stream_IO.File_Type;
                       Item :    out Ada.Streams.Stream_Element_Array;
                       Last :    out Ada.Streams.Stream_Element_Count)
