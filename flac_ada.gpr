@@ -1,6 +1,12 @@
 project Flac_Ada is
 
-  for Source_Dirs use ("./sources");
-  for Object_Dir use "./obj";
-  
+   for Source_Dirs use ("sources", "test");
+   for Object_Dir use "./obj";
+   for Main use ("simple_test.adb") & project'Main;
+
+   package Compiler is
+      for Switches ("ada") use ("-gnato", "-fstack-check", "-g", "-gnata", "-gnat12");
+   end Compiler;
+
 end Flac_Ada;
+

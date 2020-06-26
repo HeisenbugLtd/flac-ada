@@ -1,10 +1,54 @@
-package Flac.Types is
+------------------------------------------------------------------------------
+--  FLAC/Ada
+--
+--  Types
+--
+--  Defines basic types used in decoding/encoding FLAC files.
+------------------------------------------------------------------------------
 
-   -- Basic types.
+with System.Storage_Elements;
 
-   type Length_24 is range 0 .. 2 ** 24 - 1
+private package Flac.Types with
+  Pure       => True,
+  SPARK_Mode => On
+is
+
+   package SSE renames System.Storage_Elements;
+   use type SSE.Storage_Offset;
+
+   --  Basic types.
+
+   type Length_16 is range 0 .. 2 ** 16 - 1; --  16 bit
+
+   subtype Block_Size is Length_16
      with
-       Size => 24;
+       Static_Predicate => Block_Size > 15;
+
+   type Length_24 is range 0 .. 2 ** 24 - 1; --  24 bit
+
+   type Length_36 is range 0 .. 2 ** 36 - 1; --  36 bit
+
+   type Count_64 is mod 2 ** 64
+     with
+       Annotate => (GNATprove, No_Wrap_Around);
+
+   type Offset_64 is mod 2 ** 64
+     with
+       Annotate => (GNATprove, No_Wrap_Around);
+
+   type Sample_Rate is range 1 .. 65535 * 10; --  20 bit
+
+   type Channel_Count is range 1 .. 8;
+   --  3 bit
+   --
+   --  Biased representation, 0 .. 7 maps to logical 1 .. 8
+
+   type Bits_Per_Sample is range 1 .. 32;
+   --  5 bits
+   --
+   --  Careful, this is starting at 1 to avoid a wrong biased representation
+   --  (0 .. 31 maps to 1 .. 32), but officially the minimum number of bits
+   --  per sample is 4.
 
    --  BLOCK_TYPE
    --
@@ -35,5 +79,7 @@ package Flac.Types is
                        Picture        => 6,
                        Reserved       => 7,
                        Invalid        => 127);
+
+   subtype MD5_Sum is SSE.Storage_Array (0 .. 128 / 8 - 1);
 
 end Flac.Types;
