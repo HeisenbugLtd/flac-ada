@@ -1,2 +1,3 @@
-# flac-ada
-FLAC audio encoder/decoder in Ada (maybe SPARK)
+# FLAC/Ada
+
+FLAC audio encoder/decoder in Ada (hopefully SPARK)
