@@ -53,27 +53,7 @@ is
 
          --  And we're back in alignment.
          MD5_Signature   : Types.MD5_Sum;
-      end record
-     with
-       Size        => 272,
-       Object_Size => 272,
-       Bit_Order   => System.Low_Order_First;
-   pragma Warnings (Off, "component clause forces biased representation for ""Bits_Per_Sample""");
-   pragma Warnings (Off, "component clause forces biased representation for ""Num_Channels""");
-   for T use
-      record
-         Min_Block_Size  at 0 range   0 ..  15;
-         Max_Block_Size  at 0 range  16 ..  31;
-         Min_Frame_Size  at 0 range  32 ..  55;
-         Max_Frame_Size  at 0 range  56 ..  79;
-         Sample_Rate     at 0 range  80 ..  99;
-         Num_Channels    at 0 range 100 .. 102;
-         Bits_Per_Sample at 0 range 103 .. 107;
-         Total_Samples   at 0 range 108 .. 143;
-         MD5_Signature   at 0 range 144 .. 271;
       end record;
-   pragma Warnings (On, "component clause forces biased representation for ""Num_Channels""");
-   pragma Warnings (On, "component clause forces biased representation for ""Bits_Per_Sample""");
 
    subtype Raw_T is
      Ada.Streams.Stream_Element_Array (1 .. 272 / Ada.Streams.Stream_Element'Size)

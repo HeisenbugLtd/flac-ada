@@ -40,16 +40,6 @@ is
          Last       : Boolean;
          Block_Type : Types.Block_Type;
          Length     : Types.Length_24;
-      end record
-     with
-       Size        => 32,
-       Object_Size => 32,
-       Bit_Order   => System.Low_Order_First;
-   for T use
-      record
-         Last       at 0 range 7 .. 7;
-         Block_Type at 0 range 0 .. 6;
-         Length     at 0 range 8 .. 31;
       end record;
 
    subtype Raw_T is Ada.Streams.Stream_Element_Array (1 .. 4)
