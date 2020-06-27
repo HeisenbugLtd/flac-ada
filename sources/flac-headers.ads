@@ -23,6 +23,8 @@ private package Flac.Headers with
   SPARK_Mode => On
 is
 
+   use type Ada.Streams.Stream_Element_Offset;
+
    --  Stream header definitions.
    --  STREAM
    --  <32> 	"fLaC", the FLAC stream marker in ASCII, meaning byte 0 of the stream is 0x66, followed by 0x4C 0x61 0x43
@@ -30,10 +32,12 @@ is
    --  METADATA_BLOCK* 	Zero or more metadata blocks
    --  FRAME+ 	One or more audio frames    
 
-   Stream : constant Ada.Streams.Stream_Element_Array := (Character'Pos ('f'),
-                                                          Character'Pos ('L'),
-                                                          Character'Pos ('a'),
-                                                          Character'Pos ('C'));
+   subtype Four_CC is Ada.Streams.Stream_Element_Array (1 .. 4);
+
+   Stream : constant Four_CC := (Character'Pos ('f'),
+                                 Character'Pos ('L'),
+                                 Character'Pos ('a'),
+                                 Character'Pos ('C'));
 
    --  METADATA_BLOCK_HEADER
    --  <1> 	Last-metadata-block flag: '1' if this block is the last metadata block before the audio blocks, '0' otherwise.
@@ -57,13 +61,17 @@ is
          Length     : Types.Length_24;
       end record
      with
-       Size => 32;
+       Size        => 32,
+       Object_Size => 32;
    for Meta_Data_Block use
       record
          Last       at 0 range 0 ..  0;
          Block_Type at 0 range 1 ..  7;
          Length     at 1 range 0 .. 23;
       end record;
+   subtype Meta_Data_Block_Raw is Ada.Streams.Stream_Element_Array (1 .. 4)
+     with
+       Object_Size => 32;
 
    --  METADATA_BLOCK_STREAMINFO
    --  <16> 	The minimum block size (in samples) used in the stream.
@@ -85,14 +93,23 @@ is
          Max_Block_Size  : Types.Block_Size; --  samples!
          Min_Frame_Size  : Types.Length_24; --  bytes
          Max_Frame_Size  : Types.Length_24; --  bytes
-         Sample_Rate     : Types.Sample_Rate;
-         Num_Channels    : Types.Channel_Count; --  0 .. 7 => 1 .. 8
+
+         --  Ok, whoever came up with these bit assignment should get whipped.
+         --  These are not even divisable by eight, so simple byte swapping
+         --  won't help.
+
+         Sample_Rate     : Types.Sample_Rate;     --  20 bits, i.e. 2.5 bytes
+         Num_Channels    : Types.Channel_Count;   --  0 .. 7 => 1 .. 8
+         --  Another two nibbles crossing a byte boundary.
          Bits_Per_Sample : Types.Bits_Per_Sample; --  3 .. 31 => 4 .. 32
-         Total_Samples   : Types.Length_36;
+         Total_Samples   : Types.Length_36;       --  4.5 bytes.
+
+         --  And we're back in alignment.
          MD5_Signature   : Types.MD5_Sum;
       end record
      with
-       Size => 272;
+       Size        => 272,
+       Object_Size => 272;
    pragma Warnings (Off, "component clause forces biased representation for ""Bits_Per_Sample""");
    pragma Warnings (Off, "component clause forces biased representation for ""Num_Channels""");
    for Stream_Info use
@@ -109,6 +126,15 @@ is
       end record;
    pragma Warnings (On, "component clause forces biased representation for ""Num_Channels""");
    pragma Warnings (On, "component clause forces biased representation for ""Bits_Per_Sample""");
+   subtype Stream_Info_Raw is
+     Ada.Streams.Stream_Element_Array (1 .. 272 / Ada.Streams.Stream_Element'Size)
+     with
+       Object_Size => 272;
+
+   ---------------------------------------------------------------------------
+   --  BE_Swap
+   ---------------------------------------------------------------------------
+   procedure BE_Swap (Arg : in out Stream_Info_Raw);
 
    type Padding is new Ada.Streams.Stream_Element_Array;
 

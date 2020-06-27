@@ -13,7 +13,7 @@ pragma License (Unrestricted);
 --  Very simple test program to check basic functionality.
 ------------------------------------------------------------------------------
 
-with Ada.Text_IO;
+with GNAT.IO;
 with Flac.Reader;
 
 procedure Simple_Test with
@@ -46,5 +46,14 @@ begin
      Assume
        (Flac.Reader.Get_Error (Handle => Test_File) = Flac.Reader.None);
    --  Expected result is an external dependency outside of SPARK.
+
+   GNAT.IO.Put_Line
+     (S => "Channels: " & Flac.Reader.Num_Channels (Handle => Test_File)'Image);
+
+   GNAT.IO.Put_Line
+     (S => "BPS: " & Flac.Reader.Bits_Per_Sample (Handle => Test_File)'Image);
+
+   GNAT.IO.Put_Line
+     (S => "SR: " & Flac.Reader.Sample_Rate (Handle => Test_File)'Image);
 
 end Simple_Test;

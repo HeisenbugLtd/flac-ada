@@ -49,6 +49,7 @@ is
                            Is_Open (Handle => Flac_File),
                          when Open_Error | Not_A_Flac_File =>
                            not Is_Open (Handle => Flac_File)));
+   --  FIXME: Properties need to be mentioned in the post condition.
    --  Opens a given file in FLAC format. Errors will be communicated via the
    --  returned File_Type.
 
@@ -74,14 +75,44 @@ is
      with
        Depends => (Get_Error'Result => Handle);
 
+   ---------------------------------------------------------------------------
+   --  Num_Channels
+   ---------------------------------------------------------------------------
+   function Num_Channels (Handle : in File_Handle) return Natural
+     with
+       Depends => (Num_Channels'Result => Handle),
+       Pre     => Is_Valid (Handle => Handle) and Is_Open (Handle => Handle);
+
+   ---------------------------------------------------------------------------
+   --  Bits_Per_Sample
+   ---------------------------------------------------------------------------
+   function Bits_Per_Sample (Handle : in File_Handle) return Natural
+     with
+       Depends => (Bits_Per_Sample'Result => Handle),
+       Pre     => Is_Valid (Handle => Handle) and Is_Open (Handle => Handle);
+
+   ---------------------------------------------------------------------------
+   --  Sample_Rate
+   ---------------------------------------------------------------------------
+   function Sample_Rate (Handle : in File_Handle) return Natural
+     with
+       Depends => (Sample_Rate'Result => Handle),
+       Pre     => Is_Valid (Handle => Handle) and Is_Open (Handle => Handle);
+
 private
    
    type File_Handle is
       record
-         File  : Ada.Streams.Stream_IO.File_Type;
-         Error : Error_Type := None;
-         Valid : Boolean    := False;
-         Open  : Boolean    := False;
+         File            : Ada.Streams.Stream_IO.File_Type;
+         --  The associated file.
+         Error           : Error_Type := None;
+         Valid           : Boolean    := False;
+         Open            : Boolean    := False;
+         --  Status information.
+         Num_Channels    : Natural := 0; -- 1 .. 8
+         Bits_Per_Sample : Natural := 0; -- 4 .. 32
+         Sample_Rate     : Natural := 0; -- 1 .. 655350
+         --  FLAC properties read from the file.
       end record;
 
    ---------------------------------------------------------------------------
@@ -101,5 +132,23 @@ private
    ---------------------------------------------------------------------------
    function Get_Error (Handle : in File_Handle) return Error_Type is
      (Handle.Error);
+
+   ---------------------------------------------------------------------------
+   --  Num_Channels
+   ---------------------------------------------------------------------------
+   function Num_Channels (Handle : in File_Handle) return Natural is
+      (Handle.Num_Channels);
+
+   ---------------------------------------------------------------------------
+   --  Bits_Per_Sample
+   ---------------------------------------------------------------------------
+   function Bits_Per_Sample (Handle : in File_Handle) return Natural is
+     (Handle.Bits_Per_Sample);
+
+   ---------------------------------------------------------------------------
+   --  Sample_Rate
+   ---------------------------------------------------------------------------
+   function Sample_Rate (Handle : in File_Handle) return Natural is
+     (Handle.Sample_Rate);
 
 end Flac.Reader;

@@ -16,6 +16,8 @@ pragma License (Unrestricted);
 ------------------------------------------------------------------------------
 
 with Ada.Streams;
+with Interfaces;
+with System;
 
 private package Flac.Types with
   Pure       => True,
@@ -23,16 +25,29 @@ private package Flac.Types with
 is
 
    use type Ada.Streams.Stream_Element_Offset;
+   use type Interfaces.Unsigned_32;
+   use type System.Bit_Order;
+
+   --  FLAC uses (mostly) big endian format, so we need to juggle with bits
+   --  occasionally.  Create a compile time constant for swapping code.
+   Needs_Swap : constant Boolean :=
+     System.Default_Bit_Order = System.Low_Order_First;
 
    --  Basic types.
 
-   type Length_16 is range 0 .. 2 ** 16 - 1; --  16 bit
+   type Length_16 is new Interfaces.Unsigned_16;
+
+   function BE_Swap (Arg : in Length_16) return Length_16;
 
    subtype Block_Size is Length_16
      with
        Static_Predicate => Block_Size > 15;
 
-   type Length_24 is range 0 .. 2 ** 24 - 1; --  24 bit
+   type Length_24 is new Interfaces.Unsigned_32 range 0 .. 2 ** 24 - 1;
+
+   function BE_Swap (Arg : in Length_24) return Length_24
+     with
+       Inline => True;
 
    type Length_36 is range 0 .. 2 ** 36 - 1; --  36 bit
 
@@ -79,7 +94,10 @@ is
                        Reserved_7,
                        --  And everything inbetween.
                        Reserved_126,
-                       Invalid);
+                       Invalid)
+     with
+       Size        => 8,
+       Object_Size => 8;
    for Block_Type use (Stream_Info    => 0,
                        Padding        => 1,
                        Application    => 2,
@@ -92,5 +110,19 @@ is
                        Invalid        => 127);
 
    subtype MD5_Sum is Ada.Streams.Stream_Element_Array (0 .. 128 / 8 - 1);
+
+private
+
+   function BE_Swap (Arg : in Length_16) return Length_16 is
+     (if Needs_Swap
+      then Shift_Left (Arg, 8) or Shift_Right (Arg, 8)
+      else Arg);
+
+   function BE_Swap (Arg : in Length_24) return Length_24 is
+     (if Needs_Swap
+        then (Shift_Left (Arg and 16#0000FF#, 16) or
+              (Arg and 16#00FF00#)                or
+                Shift_Right (Arg and 16#FF0000#, 16))
+      else Arg);
 
 end Flac.Types;

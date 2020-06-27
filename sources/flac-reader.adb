@@ -9,6 +9,7 @@ pragma License (Unrestricted);
 
 with Ada.Streams.Stream_IO;
 with Flac.Headers;
+with Flac.Types;
 
 package body Flac.Reader with
   SPARK_Mode => On
@@ -135,9 +136,14 @@ is
    --  Open
    ---------------------------------------------------------------------------
    procedure Open (File      : in     String;
-                   Flac_File : in out File_Handle) is
-      Header : Ada.Streams.Stream_Element_Array (1 .. 4);
-      Last   : Ada.Streams.Stream_Element_Count;
+                   Flac_File : in out File_Handle)
+   is
+      use type Ada.Streams.Stream_Element_Offset;
+
+      Header          : Headers.Four_CC;
+      Last            : Ada.Streams.Stream_Element_Count;
+      Meta_Data_Raw   : Headers.Meta_Data_Block_Raw;
+      Stream_Info_Raw : Headers.Stream_Info_Raw;
 
       use type Ada.Streams.Stream_Element_Array;
       use type Ada.Streams.Stream_Element_Offset;
@@ -155,10 +161,87 @@ is
                           Item => Header,
                           Last => Last);
 
-         if Last /= 4 or else Header /= Flac.Headers.Stream then
-            Flac_File.Error := Not_A_Flac_File;
+         --  Check header.
+         if Last /= Header'Length or else Header /= Headers.Stream then
             Close (Flac_File => Flac_File);
+            Flac_File.Error := Not_A_Flac_File;
+            return;
          end if;
+      end if;
+
+      if Flac_File.Error = None then
+         --  Header check went fine, now we should go for the first Stream_Info
+         --  meta data block.  This is mandatory according to the spec.
+         IO_Wrapper.Read (File => Flac_File.File,
+                          Item => Meta_Data_Raw,
+                          Last => Last);
+
+         if Last /= Meta_Data_Raw'Length then
+            Close (Flac_File => Flac_File);
+            Flac_File.Error := Not_A_Flac_File;
+            return;
+         end if;
+
+         --  The dangerous part. We define an address overlay and figure out
+         --  if the data makes sense.
+         declare
+            Meta_Data : Headers.Meta_Data_Block
+              with
+                Address => Meta_Data_Raw'Address,
+                Import  => True;
+            pragma Annotate (GNATprove,
+                             Intentional,
+                             "object with constraints on bit representation",
+                             "We have to convert it somehow.");
+            use type Types.Block_Type;
+            use type Types.Length_24;
+         begin
+            if
+              Meta_Data.Block_Type'Valid and then
+              Meta_Data.Block_Type = Types.Stream_Info and then
+              Types.BE_Swap (Meta_Data.Length) = Headers.Stream_Info_Raw'Length
+            then
+               IO_Wrapper.Read (File => Flac_File.File,
+                                Item => Stream_Info_Raw,
+                                Last => Last);
+
+               if Last /= Stream_Info_Raw'Length then
+                  Close (Flac_File => Flac_File);
+                  Flac_File.Error := Not_A_Flac_File;
+                  return;
+               end if;
+
+               declare
+                  Stream_Info : Headers.Stream_Info
+                    with
+                      Address => Stream_Info_Raw'Address,
+                      Import  => True;
+                  pragma Annotate (GNATprove,
+                                   Intentional,
+                                   "object with constraints on bit representation",
+                                   "We have to convert it somehow.");
+               begin
+                  Headers.BE_Swap (Arg => Stream_Info_Raw);
+                  if
+                    Stream_Info.Num_Channels'Valid    and then
+                    Stream_Info.Bits_Per_Sample'Valid and then
+                    Stream_Info.Sample_Rate'Valid
+                  then
+                     Flac_File.Num_Channels    := Positive (Stream_Info.Num_Channels);
+                     Flac_File.Bits_Per_Sample := Positive (Stream_Info.Bits_Per_Sample);
+                     Flac_File.Sample_Rate     := Positive (Stream_Info.Sample_Rate);
+                  else
+                     Close (Flac_File => Flac_File);
+                     Flac_File.Error := Not_A_Flac_File;
+                     return;
+                  end if;
+               end;
+            else
+               Close (Flac_File => Flac_File);
+               Flac_File.Error := Not_A_Flac_File;
+               return;
+            end if;
+         end;
       end if;
 
       Flac_File.Open := Flac_File.Error = None;
