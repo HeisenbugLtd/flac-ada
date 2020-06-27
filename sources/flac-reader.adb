@@ -8,7 +8,8 @@
 pragma License (Unrestricted);
 
 with Ada.Streams.Stream_IO;
-with Flac.Headers;
+with Flac.Headers.Meta_Data;
+with Flac.Headers.Stream_Info;
 with Flac.Types;
 
 package body Flac.Reader with
@@ -142,8 +143,8 @@ is
 
       Header          : Headers.Four_CC;
       Last            : Ada.Streams.Stream_Element_Count;
-      Meta_Data_Raw   : Headers.Meta_Data_Block_Raw;
-      Stream_Info_Raw : Headers.Stream_Info_Raw;
+      Meta_Data_Raw   : Headers.Meta_Data.Raw_T;
+      Stream_Info_Raw : Headers.Stream_Info.Raw_T;
 
       use type Ada.Streams.Stream_Element_Array;
       use type Ada.Streams.Stream_Element_Offset;
@@ -185,21 +186,18 @@ is
          --  The dangerous part. We define an address overlay and figure out
          --  if the data makes sense.
          declare
-            Meta_Data : Headers.Meta_Data_Block
-              with
-                Address => Meta_Data_Raw'Address,
-                Import  => True;
-            pragma Annotate (GNATprove,
-                             Intentional,
-                             "object with constraints on bit representation",
-                             "We have to convert it somehow.");
+            Meta_Data        : Headers.Meta_Data.T;
+            Conversion_Error : Boolean;
             use type Types.Block_Type;
             use type Types.Length_24;
          begin
+            Headers.Meta_Data.Convert (Source           => Meta_Data_Raw,
+                                       Target           => Meta_Data,
+                                       Conversion_Error => Conversion_Error);
             if
-              Meta_Data.Block_Type'Valid and then
+              not Conversion_Error and then
               Meta_Data.Block_Type = Types.Stream_Info and then
-              Types.BE_Swap (Meta_Data.Length) = Headers.Stream_Info_Raw'Length
+              Types.BE_Swap (Meta_Data.Length) = Headers.Stream_Info.Raw_T'Length
             then
                IO_Wrapper.Read (File => Flac_File.File,
                                 Item => Stream_Info_Raw,
@@ -212,21 +210,15 @@ is
                end if;
 
                declare
-                  Stream_Info : Headers.Stream_Info
-                    with
-                      Address => Stream_Info_Raw'Address,
-                      Import  => True;
-                  pragma Annotate (GNATprove,
-                                   Intentional,
-                                   "object with constraints on bit representation",
-                                   "We have to convert it somehow.");
+                  Conversion_Error : Boolean;
+                  Stream_Info      : Headers.Stream_Info.T;
                begin
-                  Headers.BE_Swap (Arg => Stream_Info_Raw);
-                  if
-                    Stream_Info.Num_Channels'Valid    and then
-                    Stream_Info.Bits_Per_Sample'Valid and then
-                    Stream_Info.Sample_Rate'Valid
-                  then
+                  Headers.Stream_Info.Convert
+                    (Source           => Stream_Info_Raw,
+                     Target           => Stream_Info,
+                     Conversion_Error => Conversion_Error);
+
+                  if not Conversion_Error then
                      Flac_File.Num_Channels    := Positive (Stream_Info.Num_Channels);
                      Flac_File.Bits_Per_Sample := Positive (Stream_Info.Bits_Per_Sample);
                      Flac_File.Sample_Rate     := Positive (Stream_Info.Sample_Rate);

@@ -35,21 +35,25 @@ is
 
    --  Basic types.
 
-   type Length_16 is new Interfaces.Unsigned_16;
+   type Length_16 is new Interfaces.Unsigned_16
+     with
+       Annotate => (GNATprove, No_Wrap_Around);
 
    function BE_Swap (Arg : in Length_16) return Length_16;
 
-   subtype Block_Size is Length_16
-     with
-       Static_Predicate => Block_Size > 15;
+   subtype Block_Size is Length_16 range 16 .. Length_16'Last;
 
-   type Length_24 is new Interfaces.Unsigned_32 range 0 .. 2 ** 24 - 1;
+   type Length_24 is new --  24 bit
+     Interfaces.Unsigned_32 range 0 .. 2 ** 24 - 1
+       with
+         Annotate => (GNATprove, No_Wrap_Around);
 
    function BE_Swap (Arg : in Length_24) return Length_24
      with
        Inline => True;
 
-   type Length_36 is range 0 .. 2 ** 36 - 1; --  36 bit
+   type Length_36 is mod 2 ** 36 with --  36 bit
+     Annotate => (GNATprove, No_Wrap_Around);
 
    type Count_64 is mod 2 ** 64
      with
@@ -59,7 +63,11 @@ is
      with
        Annotate => (GNATprove, No_Wrap_Around);
 
-   type Sample_Rate is range 1 .. 65535 * 10; --  20 bit
+   type Length_20 is mod 2 ** 20
+     with
+       Annotate => (GNATprove, No_Wrap_Around);
+
+   subtype Sample_Rate is Length_20 range 1 .. 65535 * 10; --  20 bit
 
    type Channel_Count is range 1 .. 8;
    --  3 bit
@@ -96,7 +104,7 @@ is
                        Reserved_126,
                        Invalid)
      with
-       Size        => 8,
+       Size        => 7,
        Object_Size => 8;
    for Block_Type use (Stream_Info    => 0,
                        Padding        => 1,
