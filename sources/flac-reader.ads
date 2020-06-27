@@ -109,19 +109,24 @@ is
        Pre     => Is_Valid (Handle => Handle) and Is_Open (Handle => Handle);
 
 private
-   
-   type File_Handle is
+
+   type Stream_Properties is
       record
-         File            : Ada.Streams.Stream_IO.File_Type;
-         --  The associated file.
-         Error           : Error_Type := None;
-         Valid           : Boolean    := False;
-         Open            : Boolean    := False;
-         --  Status information.
          Num_Channels    : Natural := 0; -- 1 .. 8
          Bits_Per_Sample : Natural := 0; -- 4 .. 32
          Sample_Rate     : Natural := 0; -- 1 .. 655350
          Num_Samples     : Interfaces.Unsigned_64 := 0; --  actually 36 bits
+      end record;
+
+   type File_Handle is
+      record
+         File       : Ada.Streams.Stream_IO.File_Type;
+         --  The associated file.
+         Error      : Error_Type := None;
+         Valid      : Boolean    := False;
+         Open       : Boolean    := False;
+         --  Status information.
+         Properties : Stream_Properties;
          --  FLAC properties read from the file.
       end record;
 
@@ -147,19 +152,19 @@ private
    --  Num_Channels
    ---------------------------------------------------------------------------
    function Num_Channels (Handle : in File_Handle) return Natural is
-      (Handle.Num_Channels);
+      (Handle.Properties.Num_Channels);
 
    ---------------------------------------------------------------------------
    --  Bits_Per_Sample
    ---------------------------------------------------------------------------
    function Bits_Per_Sample (Handle : in File_Handle) return Natural is
-     (Handle.Bits_Per_Sample);
+     (Handle.Properties.Bits_Per_Sample);
 
    ---------------------------------------------------------------------------
    --  Sample_Rate
    ---------------------------------------------------------------------------
    function Sample_Rate (Handle : in File_Handle) return Natural is
-     (Handle.Sample_Rate);
+     (Handle.Properties.Sample_Rate);
 
    ---------------------------------------------------------------------------
    --  Num_Samples
@@ -167,6 +172,6 @@ private
    function Num_Samples
      (Handle : in File_Handle) return Interfaces.Unsigned_64
    is
-     (Handle.Num_Samples);
+     (Handle.Properties.Num_Samples);
 
 end Flac.Reader;
