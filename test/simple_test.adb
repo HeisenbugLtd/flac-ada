@@ -48,12 +48,15 @@ begin
    --  Expected result is an external dependency outside of SPARK.
 
    GNAT.IO.Put_Line
-     (S => "Channels: " & Flac.Reader.Num_Channels (Handle => Test_File)'Image);
+     (S => "C:   " & Flac.Reader.Num_Channels (Handle => Test_File)'Image);
 
    GNAT.IO.Put_Line
      (S => "BPS: " & Flac.Reader.Bits_Per_Sample (Handle => Test_File)'Image);
 
    GNAT.IO.Put_Line
-     (S => "SR: " & Flac.Reader.Sample_Rate (Handle => Test_File)'Image);
+     (S => "SR:  " & Flac.Reader.Sample_Rate (Handle => Test_File)'Image);
+
+   GNAT.IO.Put_Line
+     (S => "SC:  " & Flac.Reader.Num_Samples (Handle => Test_File)'Image);
 
 end Simple_Test;

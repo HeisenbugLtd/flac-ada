@@ -52,7 +52,7 @@ is
      with
        Inline => True;
 
-   type Length_36 is mod 2 ** 36 with --  36 bit
+   type Sample_Count is mod 2 ** 36 with --  36 bit
      Annotate => (GNATprove, No_Wrap_Around);
 
    type Count_64 is mod 2 ** 64

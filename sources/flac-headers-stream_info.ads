@@ -49,7 +49,7 @@ is
          Num_Channels    : Types.Channel_Count;   --  0 .. 7 => 1 .. 8
          --  Another two nibbles crossing a byte boundary.
          Bits_Per_Sample : Types.Bits_Per_Sample; --  3 .. 31 => 4 .. 32
-         Total_Samples   : Types.Length_36;       --  4.5 bytes.
+         Total_Samples   : Types.Sample_Count;    --  4.5 bytes.
 
          --  And we're back in alignment.
          MD5_Signature   : Types.MD5_Sum;

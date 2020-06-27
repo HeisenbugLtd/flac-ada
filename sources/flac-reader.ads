@@ -16,6 +16,7 @@ pragma License (Unrestricted);
 ------------------------------------------------------------------------------
 
 private with Ada.Streams.Stream_IO;
+with Interfaces;
 
 package Flac.Reader with
   SPARK_Mode => On
@@ -99,6 +100,14 @@ is
        Depends => (Sample_Rate'Result => Handle),
        Pre     => Is_Valid (Handle => Handle) and Is_Open (Handle => Handle);
 
+   ---------------------------------------------------------------------------
+   --  Num_Samples
+   ---------------------------------------------------------------------------
+   function Num_Samples (Handle : in File_Handle) return Interfaces.Unsigned_64
+     with
+       Depends => (Num_Samples'Result => Handle),
+       Pre     => Is_Valid (Handle => Handle) and Is_Open (Handle => Handle);
+
 private
    
    type File_Handle is
@@ -112,6 +121,7 @@ private
          Num_Channels    : Natural := 0; -- 1 .. 8
          Bits_Per_Sample : Natural := 0; -- 4 .. 32
          Sample_Rate     : Natural := 0; -- 1 .. 655350
+         Num_Samples     : Interfaces.Unsigned_64 := 0; --  actually 36 bits
          --  FLAC properties read from the file.
       end record;
 
@@ -150,5 +160,13 @@ private
    ---------------------------------------------------------------------------
    function Sample_Rate (Handle : in File_Handle) return Natural is
      (Handle.Sample_Rate);
+
+   ---------------------------------------------------------------------------
+   --  Num_Samples
+   ---------------------------------------------------------------------------
+   function Num_Samples
+     (Handle : in File_Handle) return Interfaces.Unsigned_64
+   is
+     (Handle.Num_Samples);
 
 end Flac.Reader;

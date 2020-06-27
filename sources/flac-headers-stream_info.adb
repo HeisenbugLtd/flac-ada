@@ -37,16 +37,16 @@ is
       if Types.Needs_Swap then
          --  First two 16 bit value for minimum and maximum block size.
          return Raw_T'((1  => Arg (2),
-                        2  => Arg (1),
+                        2  => Arg (1), --  Min_Block_Size
                         3  => Arg (4),
-                        4  => Arg (3),
+                        4  => Arg (3), --  Max_Block_Size
                         --  Minimum and maximum frame size are 24 bit values.
                         5  => Arg (7),
                         6  => Arg (6),
-                        7  => Arg (5),
+                        7  => Arg (5), --  Min_Frame_Size
                         8  => Arg (10),
                         9  => Arg (9),
-                        10 => Arg (8),
+                        10 => Arg (8), --  Max_Frame_Size
                         --  Now the fun part begins. Let's make a drawing:
                         --                         .----------- Sample rate
                         --                         |   .------- # channels
@@ -56,17 +56,24 @@ is
                         --  |....|....|....|....|....|....|....|....|...  ...|
                         --  '---------'---------'---------'---------'---  ---'
                         --   b11       b12       b13       b14       b15 ..
-                        11 => (16 * Low_Nibble (Arg (12))   or
+                        11 => (16 * Low_Nibble (Arg (12)) or
                                  High_Nibble (Arg (13))),
                         12 => (16 * Low_Nibble (Arg (11)) or
                                  High_Nibble (Arg (12))),
-                        13 => (High_Nibble (Arg (11))              or
+                        13 => (High_Nibble (Arg (11))          or
                                  (  8 * (Arg (13) and 16#0E#)) or
                                  (128 * (High_Nibble (Arg (14)) and 16#01#))),
                         14 => ((8 * Low_Nibble (Arg (13)) and 16#01#) or
-                                 (High_Nibble (Arg (14)) / 2)))
-                       --  TODO
-                       & Arg (15 .. 34));
+                                 (High_Nibble (Arg (14)) / 2) or
+                                 16 * Low_Nibble (Arg (18))),
+                        15 => ((16 * Low_Nibble (Arg (17))) or
+                                 High_Nibble (Arg (18))),
+                        16 => (16 * Low_Nibble (Arg (16)) or
+                                 High_Nibble (Arg (17))),
+                        17 => (16 * Low_Nibble (Arg (15)) or
+                                 High_Nibble (Arg (16))),
+                        18 => (16 * Low_Nibble (Arg (15))))
+                       & Arg (19 .. 34)); --  MD5 checksum
       else
          return Arg;
       end if;
@@ -87,7 +94,7 @@ is
          Num_Channels    : Types.Channel_Count;   --  0 .. 7 => 1 .. 8
          --  Another two nibbles crossing a byte boundary.
          Bits_Per_Sample : Types.Bits_Per_Sample; --  3 .. 31 => 4 .. 32
-         Total_Samples   : Types.Length_36;       --  4.5 bytes.
+         Total_Samples   : Types.Sample_Count;    --  4.5 bytes.
 
          --  And we're back in alignment.
          MD5_Signature   : Types.MD5_Sum;

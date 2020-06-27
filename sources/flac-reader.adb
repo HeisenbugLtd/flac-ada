@@ -222,6 +222,7 @@ is
                      Flac_File.Num_Channels    := Positive (Stream_Info.Num_Channels);
                      Flac_File.Bits_Per_Sample := Positive (Stream_Info.Bits_Per_Sample);
                      Flac_File.Sample_Rate     := Positive (Stream_Info.Sample_Rate);
+                     Flac_File.Num_Samples     := Interfaces.Unsigned_64 (Stream_Info.Total_Samples);
                   else
                      Close (Flac_File => Flac_File);
                      Flac_File.Error := Not_A_Flac_File;
