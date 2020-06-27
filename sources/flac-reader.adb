@@ -24,15 +24,14 @@ is
       ------------------------------------------------------------------------
       --  Is_Open
       ------------------------------------------------------------------------
-      function Is_Open
-        (File : in Ada.Streams.Stream_IO.File_Type) return Boolean
+      function Is_Open (File : in ASS.File_Type) return Boolean
         with
           Ghost => True;
 
       ------------------------------------------------------------------------
       --  Open
       ------------------------------------------------------------------------
-      procedure Open (File  :    out Ada.Streams.Stream_IO.File_Type;
+      procedure Open (File  :    out ASS.File_Type;
                       Name  : in     String;
                       Error :    out Error_Type)
         with
@@ -43,7 +42,7 @@ is
       ------------------------------------------------------------------------
       --  Close
       ------------------------------------------------------------------------
-      procedure Close (File : in out Ada.Streams.Stream_IO.File_Type)
+      procedure Close (File : in out ASS.File_Type)
         with
           Post    => (not Is_Open (File => File)),
           Depends => (File  => File);
@@ -51,7 +50,7 @@ is
       ------------------------------------------------------------------------
       --  Read
       ------------------------------------------------------------------------
-      procedure Read (File : in     Ada.Streams.Stream_IO.File_Type;
+      procedure Read (File : in     ASS.File_Type;
                       Item :    out Ada.Streams.Stream_Element_Array;
                       Last :    out Ada.Streams.Stream_Element_Count)
         with
@@ -69,29 +68,28 @@ is
       ------------------------------------------------------------------------
       --  Is_Open
       ------------------------------------------------------------------------
-      function Is_Open
-        (File : in Ada.Streams.Stream_IO.File_Type) return Boolean
+      function Is_Open (File : in ASS.File_Type) return Boolean
         with
           SPARK_Mode => Off
       is
       begin
          --  function body doesn't really matter, it is just there to prove that
          --  error checks have been done before calling other stuff.
-         return Ada.Streams.Stream_IO.Is_Open (File => File);
+         return ASS.Is_Open (File => File);
       end Is_Open;
 
       ------------------------------------------------------------------------
       --  Open
       ------------------------------------------------------------------------
-      procedure Open (File  :    out Ada.Streams.Stream_IO.File_Type;
+      procedure Open (File  :    out ASS.File_Type;
                       Name  : in     String;
                       Error :    out Error_Type)
         with
           SPARK_Mode => Off is
       begin
-         Ada.Streams.Stream_IO.Open (File => File,
-                                     Mode => Ada.Streams.Stream_IO.In_File,
-                                     Name => Name);
+         ASS.Open (File => File,
+                   Mode => Ada.Streams.Stream_IO.In_File,
+                   Name => Name);
          Error := None;
       exception
          when others =>
@@ -101,25 +99,25 @@ is
       ------------------------------------------------------------------------
       --  Close
       ------------------------------------------------------------------------
-      procedure Close (File : in out Ada.Streams.Stream_IO.File_Type)
+      procedure Close (File : in out ASS.File_Type)
         with
           SPARK_Mode => Off is
       begin
-         Ada.Streams.Stream_IO.Close (File => File);
+         ASS.Close (File => File);
       end Close;
 
       ------------------------------------------------------------------------
       --  Read
       ------------------------------------------------------------------------
-      procedure Read (File : in     Ada.Streams.Stream_IO.File_Type;
+      procedure Read (File : in     ASS.File_Type;
                       Item :    out Ada.Streams.Stream_Element_Array;
                       Last :    out Ada.Streams.Stream_Element_Count)
         with
           SPARK_Mode => Off is
       begin
-         Ada.Streams.Stream_IO.Read (File => File,
-                                     Item => Item,
-                                     Last => Last);
+         ASS.Read (File => File,
+                   Item => Item,
+                   Last => Last);
       end Read;
 
    end IO_Wrapper;
@@ -184,8 +182,7 @@ is
          return;
       end if;
 
-      --  The dangerous part. We define an address overlay and figure out if
-      --  the data makes sense.
+      --  Let's figure out if the data makes sense.
       declare
          Meta_Data        : Headers.Meta_Data.T;
          Conversion_Error : Boolean;
@@ -199,7 +196,7 @@ is
          if
            not Conversion_Error and then
            Meta_Data.Block_Type = Types.Stream_Info and then
-           Types.BE_Swap (Meta_Data.Length) = Headers.Stream_Info.Raw_T'Length
+           Meta_Data.Length = Headers.Stream_Info.Raw_T'Length
          then
             IO_Wrapper.Read (File => Flac_File.File,
                              Item => Stream_Info_Raw,
@@ -237,6 +234,37 @@ is
             Flac_File.Error := Not_A_Flac_File;
             return;
          end if;
+
+         --   There may be more meta data blocks.  For now, we just skip them.
+         Skip_All_Meta_Data :
+         declare
+            use type Ada.Streams.Stream_IO.Count;
+         begin
+            while not Meta_Data.Last loop
+               IO_Wrapper.Read (File => Flac_File.File,
+                                Item => Meta_Data_Raw,
+                                Last => Last);
+
+               Headers.Meta_Data.Convert (Source           => Meta_Data_Raw,
+                                          Target           => Meta_Data,
+                                          Conversion_Error => Conversion_Error);
+
+               if
+                 not Conversion_Error and then
+                 Meta_Data.Block_Type /= Types.Invalid
+               then
+                  ASS.Set_Index
+                    (File => Flac_File.File,
+                     To   =>
+                       ASS.Index
+                         (File => Flac_File.File) + ASS.Count (Meta_Data.Length));
+               else
+                  Close (Flac_File => Flac_File);
+                  Flac_File.Error := Not_A_Flac_File;
+                  return;
+               end if;
+            end loop;
+         end Skip_All_Meta_Data;
       end;
 
       Flac_File.Open := Flac_File.Error = None;

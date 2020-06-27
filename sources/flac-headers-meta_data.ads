@@ -43,12 +43,13 @@ is
       end record
      with
        Size        => 32,
-       Object_Size => 32;
+       Object_Size => 32,
+       Bit_Order   => System.Low_Order_First;
    for T use
       record
-         Last       at 0 range 0 ..  0;
-         Block_Type at 0 range 1 ..  7;
-         Length     at 1 range 0 .. 23;
+         Last       at 0 range 7 .. 7;
+         Block_Type at 0 range 0 .. 6;
+         Length     at 0 range 8 .. 31;
       end record;
 
    subtype Raw_T is Ada.Streams.Stream_Element_Array (1 .. 4)

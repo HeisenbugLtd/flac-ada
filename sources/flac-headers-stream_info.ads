@@ -37,7 +37,7 @@ is
    type T is
       record
          Min_Block_Size  : Types.Block_Size; --  samples
-         Max_Block_Size  : Types.Block_Size; --  samples!
+         Max_Block_Size  : Types.Block_Size; --  samples
          Min_Frame_Size  : Types.Length_24; --  bytes
          Max_Frame_Size  : Types.Length_24; --  bytes
 
@@ -56,20 +56,21 @@ is
       end record
      with
        Size        => 272,
-       Object_Size => 272;
+       Object_Size => 272,
+       Bit_Order   => System.Low_Order_First;
    pragma Warnings (Off, "component clause forces biased representation for ""Bits_Per_Sample""");
    pragma Warnings (Off, "component clause forces biased representation for ""Num_Channels""");
    for T use
       record
-         Min_Block_Size  at  0 range  0 ..  15;
-         Max_Block_Size  at  2 range  0 ..  15;
-         Min_Frame_Size  at  4 range  0 ..  23;
-         Max_Frame_Size  at  7 range  0 ..  23;
-         Sample_Rate     at 10 range  0 ..  19;
-         Num_Channels    at 10 range 20 ..  22;
-         Bits_Per_Sample at 10 range 23 ..  27;
-         Total_Samples   at 10 range 28 ..  63;
-         MD5_Signature   at 18 range  0 .. 127;
+         Min_Block_Size  at 0 range   0 ..  15;
+         Max_Block_Size  at 0 range  16 ..  31;
+         Min_Frame_Size  at 0 range  32 ..  55;
+         Max_Frame_Size  at 0 range  56 ..  79;
+         Sample_Rate     at 0 range  80 ..  99;
+         Num_Channels    at 0 range 100 .. 102;
+         Bits_Per_Sample at 0 range 103 .. 107;
+         Total_Samples   at 0 range 108 .. 143;
+         MD5_Signature   at 0 range 144 .. 271;
       end record;
    pragma Warnings (On, "component clause forces biased representation for ""Num_Channels""");
    pragma Warnings (On, "component clause forces biased representation for ""Bits_Per_Sample""");

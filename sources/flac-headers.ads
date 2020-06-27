@@ -19,6 +19,7 @@ with Flac.Types;
 with Ada.Streams;
 with Ada.Unchecked_Conversion;
 with Interfaces;
+with System;
 
 private package Flac.Headers with
   Pure       => True,
@@ -60,7 +61,8 @@ is
          Sample_Count  : Types.Length_16;
       end record
      with
-       Size => 144;
+       Size      => 144,
+       Bit_Order => System.Low_Order_First;
    for Seek_Point use
       record
          Sample_Number at  0 range 0 .. 63;
