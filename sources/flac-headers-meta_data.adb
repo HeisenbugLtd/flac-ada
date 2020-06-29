@@ -75,8 +75,8 @@ is
          Conversion_Error := Target = Types.Invalid;
       end To_Block_Type;
 
-      Full_View  : Full_T := To_Full (S => Source);
-      Block_Type : Types.Block_Type := Types.Invalid;
+      Full_View  : constant Full_T := To_Full (S => Source);
+      Block_Type : Types.Block_Type;
    begin
       To_Block_Type (Source => Full_View.Block_Type,
                      Target => Block_Type);
