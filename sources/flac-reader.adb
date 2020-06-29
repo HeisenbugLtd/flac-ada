@@ -59,6 +59,15 @@ is
           Depends => (Last => (File, Item),
                       Item => (File, Item));
 
+      ------------------------------------------------------------------------
+      --  Skip
+      ------------------------------------------------------------------------
+      procedure Skip (File         : in ASS.File_Type;
+                      Num_Elements : in ASS.Count)
+        with
+          Pre     => Is_Open (File => File),
+          Post    => Is_Open (File => File);
+
    end IO_Wrapper;
 
    package body IO_Wrapper with
@@ -119,6 +128,20 @@ is
                    Item => Item,
                    Last => Last);
       end Read;
+
+      ------------------------------------------------------------------------
+      --  Skip
+      ------------------------------------------------------------------------
+      procedure Skip (File         : in ASS.File_Type;
+                      Num_Elements : in ASS.Count)
+        with
+          SPARK_Mode => Off
+      is
+         use type Ada.Streams.Stream_IO.Count;
+      begin
+         ASS.Set_Index (File => File,
+                        To   => ASS.Index (File => File) + Num_Elements);
+      end Skip;
 
    end IO_Wrapper;
 
@@ -241,9 +264,16 @@ is
             use type Ada.Streams.Stream_IO.Count;
          begin
             while not Meta_Data.Last loop
+               pragma Loop_Invariant (Get_Error (Handle => Flac_File) = None);
                IO_Wrapper.Read (File => Flac_File.File,
                                 Item => Meta_Data_Raw,
                                 Last => Last);
+
+               if Last /= Meta_Data_Raw'Length then
+                  Close (Flac_File => Flac_File);
+                  Flac_File.Error := Not_A_Flac_File;
+                  return;
+               end if;
 
                Headers.Meta_Data.Convert (Source           => Meta_Data_Raw,
                                           Target           => Meta_Data,
@@ -253,11 +283,8 @@ is
                  not Conversion_Error and then
                  Meta_Data.Block_Type /= Types.Invalid
                then
-                  ASS.Set_Index
-                    (File => Flac_File.File,
-                     To   =>
-                       ASS.Index
-                         (File => Flac_File.File) + ASS.Count (Meta_Data.Length));
+                  IO_Wrapper.Skip (File         => Flac_File.File,
+                                   Num_Elements => ASS.Count (Meta_Data.Length));
                else
                   Close (Flac_File => Flac_File);
                   Flac_File.Error := Not_A_Flac_File;
