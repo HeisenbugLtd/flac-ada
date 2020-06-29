@@ -52,8 +52,9 @@ is
      with
        Inline => True;
 
-   type Sample_Count is mod 2 ** 36 with --  36 bit
-     Annotate => (GNATprove, No_Wrap_Around);
+   type Sample_Count is mod 2 ** 36 --  36 bit
+     with
+       Annotate => (GNATprove, No_Wrap_Around);
 
    type Count_64 is mod 2 ** 64
      with
@@ -67,7 +68,7 @@ is
      with
        Annotate => (GNATprove, No_Wrap_Around);
 
-   subtype Sample_Rate is Length_20 range 1 .. 65535 * 10; --  20 bit
+   subtype Sample_Rate is Length_20 range 1 .. 65535 * 10;
 
    type Channel_Count is range 1 .. 8;
    --  3 bit
