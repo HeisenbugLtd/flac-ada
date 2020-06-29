@@ -11,146 +11,18 @@ with Ada.Streams.Stream_IO;
 with Flac.Headers.Meta_Data;
 with Flac.Headers.Stream_Info;
 with Flac.Types;
+with SPARK_Stream_IO;
 
 package body Flac.Reader with
   SPARK_Mode => On
 is
-
-   package ASS renames Ada.Streams.Stream_IO;
-
-   package IO_Wrapper with
-     SPARK_Mode => On
-   is
-      ------------------------------------------------------------------------
-      --  Is_Open
-      ------------------------------------------------------------------------
-      function Is_Open (File : in ASS.File_Type) return Boolean
-        with
-          Ghost => True;
-
-      ------------------------------------------------------------------------
-      --  Open
-      ------------------------------------------------------------------------
-      procedure Open (File  :    out ASS.File_Type;
-                      Name  : in     String;
-                      Error :    out Error_Type)
-        with
-          Post    => (if Error = None then Is_Open (File => File)),
-          Depends => (File  => Name,
-                      Error => Name);
-
-      ------------------------------------------------------------------------
-      --  Close
-      ------------------------------------------------------------------------
-      procedure Close (File : in out ASS.File_Type)
-        with
-          Post    => (not Is_Open (File => File)),
-          Depends => (File  => File);
-
-      ------------------------------------------------------------------------
-      --  Read
-      ------------------------------------------------------------------------
-      procedure Read (File : in     ASS.File_Type;
-                      Item :    out Ada.Streams.Stream_Element_Array;
-                      Last :    out Ada.Streams.Stream_Element_Count)
-        with
-          Pre     => Is_Open (File => File),
-          Post    => Is_Open (File => File),
-          Depends => (Last => (File, Item),
-                      Item => (File, Item));
-
-      ------------------------------------------------------------------------
-      --  Skip
-      ------------------------------------------------------------------------
-      procedure Skip (File         : in ASS.File_Type;
-                      Num_Elements : in ASS.Count)
-        with
-          Pre     => Is_Open (File => File),
-          Post    => Is_Open (File => File);
-
-   end IO_Wrapper;
-
-   package body IO_Wrapper with
-     SPARK_Mode => On
-   is
-
-      ------------------------------------------------------------------------
-      --  Is_Open
-      ------------------------------------------------------------------------
-      function Is_Open (File : in ASS.File_Type) return Boolean
-        with
-          SPARK_Mode => Off
-      is
-      begin
-         --  function body doesn't really matter, it is just there to prove that
-         --  error checks have been done before calling other stuff.
-         return ASS.Is_Open (File => File);
-      end Is_Open;
-
-      ------------------------------------------------------------------------
-      --  Open
-      ------------------------------------------------------------------------
-      procedure Open (File  :    out ASS.File_Type;
-                      Name  : in     String;
-                      Error :    out Error_Type)
-        with
-          SPARK_Mode => Off is
-      begin
-         ASS.Open (File => File,
-                   Mode => Ada.Streams.Stream_IO.In_File,
-                   Name => Name);
-         Error := None;
-      exception
-         when others =>
-            Error := Open_Error;
-      end Open;
-
-      ------------------------------------------------------------------------
-      --  Close
-      ------------------------------------------------------------------------
-      procedure Close (File : in out ASS.File_Type)
-        with
-          SPARK_Mode => Off is
-      begin
-         ASS.Close (File => File);
-      end Close;
-
-      ------------------------------------------------------------------------
-      --  Read
-      ------------------------------------------------------------------------
-      procedure Read (File : in     ASS.File_Type;
-                      Item :    out Ada.Streams.Stream_Element_Array;
-                      Last :    out Ada.Streams.Stream_Element_Count)
-        with
-          SPARK_Mode => Off is
-      begin
-         ASS.Read (File => File,
-                   Item => Item,
-                   Last => Last);
-      end Read;
-
-      ------------------------------------------------------------------------
-      --  Skip
-      ------------------------------------------------------------------------
-      procedure Skip (File         : in ASS.File_Type;
-                      Num_Elements : in ASS.Count)
-        with
-          SPARK_Mode => Off
-      is
-         use type Ada.Streams.Stream_IO.Count;
-      begin
-         ASS.Set_Index (File => File,
-                        To   => ASS.Index (File => File) + Num_Elements);
-      end Skip;
-
-   end IO_Wrapper;
 
    ---------------------------------------------------------------------------
    --  Close
    ---------------------------------------------------------------------------
    procedure Close (Flac_File : in out File_Handle) is
    begin
-      IO_Wrapper.Close (Flac_File.File);
+      SPARK_Stream_IO.Close (Flac_File.File);
       Flac_File.Open := False;
    end Close;
 
@@ -163,9 +35,9 @@ is
       use type Ada.Streams.Stream_Element_Offset;
 
       Header          : Headers.Four_CC;
-      Last            : Ada.Streams.Stream_Element_Count;
       Meta_Data_Raw   : Headers.Meta_Data.Raw_T;
       Stream_Info_Raw : Headers.Stream_Info.Raw_T;
+      Error           : Boolean;
 
       use type Ada.Streams.Stream_Element_Array;
       use type Ada.Streams.Stream_Element_Offset;
@@ -173,21 +45,23 @@ is
       Flac_File.Valid := True;
 
       --  Assume successful operation.
-      IO_Wrapper.Open (File  => Flac_File.File,
-                       Name  => File,
-                       Error => Flac_File.Error);
+      SPARK_Stream_IO.Open (File  => Flac_File.File,
+                            Name  => File,
+                            Error => Error);
 
-      if Flac_File.Error /= None then
+      if Error then
+         Flac_File.Error := Open_Error;
          return;
       end if;
 
-      Flac_File.Open := True; --  For precondition of "Close" below.
-      IO_Wrapper.Read (File => Flac_File.File,
-                       Item => Header,
-                       Last => Last);
+      Flac_File.Open  := True; --  For precondition of "Close" below.
+      Flac_File.Error := None;
+      SPARK_Stream_IO.Read (File  => Flac_File.File,
+                            Item  => Header,
+                            Error => Error);
 
       --  Check header.
-      if Last /= Header'Length or else Header /= Headers.Stream then
+      if Error or else Header /= Headers.Stream then
          Close (Flac_File => Flac_File);
          Flac_File.Error := Not_A_Flac_File;
          return;
@@ -195,11 +69,11 @@ is
 
       --  Header check went fine, now we should go for the first Stream_Info
       --  meta data block.  This is mandatory according to the spec.
-      IO_Wrapper.Read (File => Flac_File.File,
-                       Item => Meta_Data_Raw,
-                       Last => Last);
+      SPARK_Stream_IO.Read (File  => Flac_File.File,
+                            Item  => Meta_Data_Raw,
+                            Error => Error);
 
-      if Last /= Meta_Data_Raw'Length then
+      if Error then
          Close (Flac_File => Flac_File);
          Flac_File.Error := Not_A_Flac_File;
          return;
@@ -221,11 +95,11 @@ is
            Meta_Data.Block_Type = Types.Stream_Info and then
            Meta_Data.Length = Headers.Stream_Info.Raw_T'Length
          then
-            IO_Wrapper.Read (File => Flac_File.File,
-                             Item => Stream_Info_Raw,
-                             Last => Last);
+            SPARK_Stream_IO.Read (File  => Flac_File.File,
+                                  Item  => Stream_Info_Raw,
+                                  Error => Error);
 
-            if Last /= Stream_Info_Raw'Length then
+            if Error then
                Close (Flac_File => Flac_File);
                Flac_File.Error := Not_A_Flac_File;
                return;
@@ -258,18 +132,18 @@ is
             return;
          end if;
 
-         --   There may be more meta data blocks.  For now, we just skip them.
+         --  There may be more meta data blocks.  For now, we just skip them.
          Skip_All_Meta_Data :
          declare
             use type Ada.Streams.Stream_IO.Count;
          begin
             while not Meta_Data.Last loop
                pragma Loop_Invariant (Get_Error (Handle => Flac_File) = None);
-               IO_Wrapper.Read (File => Flac_File.File,
-                                Item => Meta_Data_Raw,
-                                Last => Last);
+               SPARK_Stream_IO.Read (File  => Flac_File.File,
+                                     Item  => Meta_Data_Raw,
+                                     Error => Error);
 
-               if Last /= Meta_Data_Raw'Length then
+               if Error then
                   Close (Flac_File => Flac_File);
                   Flac_File.Error := Not_A_Flac_File;
                   return;
@@ -283,8 +157,17 @@ is
                  not Conversion_Error and then
                  Meta_Data.Block_Type /= Types.Invalid
                then
-                  IO_Wrapper.Skip (File         => Flac_File.File,
-                                   Num_Elements => ASS.Count (Meta_Data.Length));
+                  SPARK_Stream_IO.Skip
+                    (File         => Flac_File.File,
+                     Num_Elements =>
+                       Ada.Streams.Stream_IO.Count (Meta_Data.Length),
+                     Error        => Error);
+
+                  if Error then
+                     Close (Flac_File => Flac_File);
+                     Flac_File.Error := Not_A_Flac_File;
+                     return;
+                  end if;
                else
                   Close (Flac_File => Flac_File);
                   Flac_File.Error := Not_A_Flac_File;
