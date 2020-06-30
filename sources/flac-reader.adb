@@ -40,16 +40,13 @@ is
       use type Ada.Streams.Stream_Element_Array;
       use type Ada.Streams.Stream_Element_Offset;
    begin
-      Flac_File.Valid := True;
-
-      --  Assume successful operation.
+      --  Try opening the actual file.
       SPARK_Stream_IO.Open (File  => Flac_File.File,
                             Name  => File,
                             Error => Error);
 
       if Error then
          Flac_File.Error := Open_Error;
-         pragma Assert (Is_Valid (Handle => Flac_File));
          pragma Assert (not SPARK_Stream_IO.Is_Open (File => Flac_File.File));
          return;
       end if;
@@ -140,8 +137,7 @@ is
          begin
             while not Meta_Data.Last loop
                pragma Loop_Invariant (Get_Error (Handle => Flac_File) = None and then
-                                      Is_Open (Handle => Flac_File) and then
-                                      Is_Valid (Handle => Flac_File));
+                                      Is_Open (Handle => Flac_File));
                SPARK_Stream_IO.Read (File  => Flac_File.File,
                                      Item  => Meta_Data_Raw,
                                      Error => Error);
@@ -169,14 +165,12 @@ is
                   if Error then
                      Close (Flac_File => Flac_File);
                      Flac_File.Error := Not_A_Flac_File;
-                     pragma Assert (Is_Valid (Handle => Flac_File));
                      pragma Assert (not Is_Open (Handle => Flac_File));
                      return;
                   end if;
                else
                   Close (Flac_File => Flac_File);
                   Flac_File.Error := Not_A_Flac_File;
-                  pragma Assert (Is_Valid (Handle => Flac_File));
                   pragma Assert (not Is_Open (Handle => Flac_File));
                   return;
                end if;
@@ -184,7 +178,6 @@ is
          end Skip_All_Meta_Data;
       end;
 
-      pragma Assert (Is_Valid (Handle => Flac_File));
       pragma Assert (Is_Open (Handle => Flac_File));
       Flac_File.Open := Flac_File.Error = None;
    end Open;

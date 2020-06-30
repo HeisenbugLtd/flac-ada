@@ -28,16 +28,8 @@ is
    type File_Handle is limited private
      with
        Default_Initial_Condition =>
-         (not Is_Valid (File_Handle) and
-          not Is_Open (File_Handle) and
+         (not Is_Open (File_Handle) and
           Get_Error (File_Handle) = None);
-
-   ---------------------------------------------------------------------------
-   --  Is_Valid
-   ---------------------------------------------------------------------------
-   function Is_Valid (Handle : in File_Handle) return Boolean
-     with
-       Ghost => True;
 
    ---------------------------------------------------------------------------
    --  Open
@@ -45,12 +37,11 @@ is
    procedure Open (File      : in     String;
                    Flac_File : in out File_Handle) with
      Pre  => not Is_Open (Handle => Flac_File),
-     Post => (Is_Valid (Handle => Flac_File) and then
-                (case Get_Error (Flac_File) is
-                    when None =>
-                       Is_Open (Handle => Flac_File),
-                    when Open_Error | Not_A_Flac_File =>
-                       not Is_Open (Handle => Flac_File)));
+     Post => (case Get_Error (Flac_File) is
+                when None =>
+                  Is_Open (Handle => Flac_File),
+                when Open_Error | Not_A_Flac_File =>
+                  not Is_Open (Handle => Flac_File));
    --  FIXME: Properties need to be mentioned in the post condition.
    --  Opens a given file in FLAC format. Errors will be communicated via the
    --  returned File_Type.
@@ -60,10 +51,8 @@ is
    ---------------------------------------------------------------------------
    procedure Close (Flac_File : in out File_Handle)
      with
-       Pre  =>
-         Is_Valid (Handle => Flac_File) and Is_Open (Handle => Flac_File),
-       Post =>
-         Is_Valid (Handle => Flac_File) and not Is_Open (Handle => Flac_File);
+       Pre  => Is_Open (Handle => Flac_File),
+       Post => not Is_Open (Handle => Flac_File);
 
    ---------------------------------------------------------------------------
    --  Is_Open
@@ -83,7 +72,7 @@ is
    function Num_Channels (Handle : in File_Handle) return Natural
      with
        Depends => (Num_Channels'Result => Handle),
-       Pre     => Is_Valid (Handle => Handle) and Is_Open (Handle => Handle);
+       Pre     => Is_Open (Handle => Handle);
 
    ---------------------------------------------------------------------------
    --  Bits_Per_Sample
@@ -91,7 +80,7 @@ is
    function Bits_Per_Sample (Handle : in File_Handle) return Natural
      with
        Depends => (Bits_Per_Sample'Result => Handle),
-       Pre     => Is_Valid (Handle => Handle) and Is_Open (Handle => Handle);
+       Pre     => Is_Open (Handle => Handle);
 
    ---------------------------------------------------------------------------
    --  Sample_Rate
@@ -99,7 +88,7 @@ is
    function Sample_Rate (Handle : in File_Handle) return Natural
      with
        Depends => (Sample_Rate'Result => Handle),
-       Pre     => Is_Valid (Handle => Handle) and Is_Open (Handle => Handle);
+       Pre     => Is_Open (Handle => Handle);
 
    ---------------------------------------------------------------------------
    --  Num_Samples
@@ -107,7 +96,7 @@ is
    function Num_Samples (Handle : in File_Handle) return Interfaces.Unsigned_64
      with
        Depends => (Num_Samples'Result => Handle),
-       Pre     => Is_Valid (Handle => Handle) and Is_Open (Handle => Handle);
+       Pre     => Is_Open (Handle => Handle);
 
 private
 
@@ -124,7 +113,6 @@ private
          File       : Ada.Streams.Stream_IO.File_Type;
          --  The associated file.
          Error      : Error_Type := None;
-         Valid      : Boolean    := False;
          Open       : Boolean    := False;
          --  Status information.
          Properties : Stream_Properties;
@@ -136,12 +124,6 @@ private
    ---------------------------------------------------------------------------
    function Is_Open (Handle : in File_Handle) return Boolean is
      (Handle.Open and then SPARK_Stream_IO.Is_Open (Handle.File));
-
-   ---------------------------------------------------------------------------
-   --  Is_Valid
-   ---------------------------------------------------------------------------
-   function Is_Valid (Handle : in File_Handle) return Boolean is
-     (Handle.Valid);
 
    ---------------------------------------------------------------------------
    --  Get_Error
