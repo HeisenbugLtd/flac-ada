@@ -26,9 +26,7 @@ is
    ---------------------------------------------------------------------------
    --  Is_Open
    ---------------------------------------------------------------------------
-   function Is_Open (File : in ASS.File_Type) return Boolean
-     with
-       Ghost => True;
+   function Is_Open (File : in ASS.File_Type) return Boolean;
 
    ---------------------------------------------------------------------------
    --  Open
@@ -37,7 +35,7 @@ is
                    Name  : in     String;
                    Error :    out Boolean)
      with
-       Post    => (if not Error then Is_Open (File => File)),
+       Post    => (Is_Open (File => File) = not Error),
        Depends => (File  => Name,
                    Error => Name);
 
@@ -46,8 +44,9 @@ is
    ---------------------------------------------------------------------------
    procedure Close (File : in out ASS.File_Type)
      with
+       Pre     => Is_Open (File => File),
        Post    => (not Is_Open (File => File)),
-       Depends => (File  => File);
+       Depends => (File => File);
 
    ---------------------------------------------------------------------------
    --  Read
@@ -56,8 +55,10 @@ is
                    Item  :    out Ada.Streams.Stream_Element_Array;
                    Error :    out Boolean)
      with
+       Relaxed_Initialization => Item,
        Pre     => Is_Open (File => File),
-       Post    => Is_Open (File => File),
+       Post    => (Is_Open (File => File) and then
+                     (if not Error then Item'Initialized)),
        Depends => (Error => (File, Item),
                    Item  => (File, Item));
 
@@ -68,7 +69,8 @@ is
                    Num_Elements : in     ASS.Count;
                    Error        :    out Boolean)
      with
-       Pre  => Is_Open (File => File),
-       Post => Is_Open (File => File);
+       Pre     => Is_Open (File => File),
+       Post    => Is_Open (File => File),
+       Depends => (Error => (File, Num_Elements));
 
 end SPARK_Stream_IO;

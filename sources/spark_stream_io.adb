@@ -15,14 +15,10 @@ is
    --  Is_Open
    ---------------------------------------------------------------------------
    function Is_Open (File : in ASS.File_Type) return Boolean
-     with
-       SPARK_Mode => Off
    is
-   begin
-      --  function body doesn't really matter, it is just there to prove that
-      --  error checks have been done before calling other stuff.
-      return ASS.Is_Open (File => File);
-   end Is_Open;
+     (ASS.Is_Open (File => File))
+       with
+         SPARK_Mode => Off;
 
    ---------------------------------------------------------------------------
    --  Open
