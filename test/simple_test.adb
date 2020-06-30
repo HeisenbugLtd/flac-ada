@@ -14,6 +14,7 @@ pragma License (Unrestricted);
 ------------------------------------------------------------------------------
 
 with GNAT.IO;
+with Flac.Debug;
 with Flac.Reader;
 
 procedure Simple_Test with
@@ -23,6 +24,7 @@ is
    use type Flac.Main_Error_Type;
    use type Flac.Error_Type;
    pragma Assertion_Policy (Check);
+
 begin
    Flac.Reader.Open (File      => "doesnotexist.flac",
                      Flac_File => Test_File);
@@ -48,18 +50,5 @@ begin
        (Flac.Reader.Get_Error (Handle => Test_File) = Flac.No_Error);
    --  Expected result is an external dependency outside of SPARK.
 
-   pragma Warnings (Off, "no Global contract available for ""Put_Line""");
-   GNAT.IO.Put_Line
-     (S => "C:   " & Flac.Reader.Num_Channels (Handle => Test_File)'Image);
-
-   GNAT.IO.Put_Line
-     (S => "BPS: " & Flac.Reader.Bits_Per_Sample (Handle => Test_File)'Image);
-
-   GNAT.IO.Put_Line
-     (S => "SR:  " & Flac.Reader.Sample_Rate (Handle => Test_File)'Image);
-
-   GNAT.IO.Put_Line
-     (S => "SC:  " & Flac.Reader.Num_Samples (Handle => Test_File)'Image);
-   pragma Warnings (On, "no Global contract available for ""Put_Line""");
-
+   Flac.Debug.Print_Stream_Info (Handle => Test_File);
 end Simple_Test;
