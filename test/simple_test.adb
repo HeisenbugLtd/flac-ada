@@ -20,7 +20,8 @@ procedure Simple_Test with
   SPARK_Mode => On
 is
    Test_File : Flac.Reader.File_Handle;
-   use type Flac.Reader.Error_Type;
+   use type Flac.Main_Error_Type;
+   use type Flac.Error_Type;
    pragma Assertion_Policy (Check);
 begin
    Flac.Reader.Open (File      => "doesnotexist.flac",
@@ -28,7 +29,7 @@ begin
 
    pragma
      Assume
-       (Flac.Reader.Get_Error (Handle => Test_File) = Flac.Reader.Open_Error);
+       (Flac.Reader.Get_Error (Handle => Test_File).Main = Flac.Open_Error);
    --  Expected result is an external dependency outside of SPARK.
 
    Flac.Reader.Open (File      => "notaflac.flac",
@@ -36,7 +37,7 @@ begin
 
    pragma
      Assume
-       (Flac.Reader.Get_Error (Handle => Test_File) = Flac.Reader.Not_A_Flac_File);
+       (Flac.Reader.Get_Error (Handle => Test_File).Main = Flac.Not_A_Flac_File);
    --  Expected result is an external dependency outside of SPARK.
 
    Flac.Reader.Open (File      => "Unnamed.flac",
@@ -44,7 +45,7 @@ begin
 
    pragma
      Assume
-       (Flac.Reader.Get_Error (Handle => Test_File) = Flac.Reader.None);
+       (Flac.Reader.Get_Error (Handle => Test_File) = Flac.No_Error);
    --  Expected result is an external dependency outside of SPARK.
 
    pragma Warnings (Off, "no Global contract available for ""Put_Line""");

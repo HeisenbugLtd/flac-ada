@@ -63,8 +63,8 @@ is
       ASS.Read (File => File,
                 Item => Item,
                 Last => Last);
-      
-      Error := Last /= Item'Length;
+
+      Error := Last /= Item'Last;
    end Read;
 
    ---------------------------------------------------------------------------

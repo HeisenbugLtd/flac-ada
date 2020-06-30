@@ -30,8 +30,8 @@ is
    procedure Validate_Header (Flac_File : in out File_Handle)
      with
        Pre  => (Is_Open (Handle => Flac_File) and then
-                Flac_File.Error = None),
-       Post => (case Flac_File.Error is
+                Flac_File.Error = No_Error),
+       Post => (case Flac_File.Error.Main is
                   when None => Is_Open (Handle => Flac_File),
                   when others => not Is_Open (Handle => Flac_File)),
        Depends => (Flac_File => Flac_File);
@@ -44,8 +44,29 @@ is
      with
        Relaxed_Initialization => Meta_Data,
        Pre     => (Is_Open (Handle => Flac_File) and then
-                   Flac_File.Error = None),
-       Post    => (case Flac_File.Error is
+                   Flac_File.Error = No_Error),
+       Post    => (case Flac_File.Error.Main is
+                     when None =>
+                       Is_Open (Handle => Flac_File) and then
+                       Meta_Data'Initialized,
+                     when others =>
+                       not Is_Open (Handle => Flac_File)),
+       Depends => (Flac_File => Flac_File,
+                   Meta_Data => Flac_File);
+
+   ---------------------------------------------------------------------------
+   --  Read_Stream_Info
+   --
+   --  Reads basic stream info from current position.
+   --  Requires to have read a meta data block with Info = Stream_Info before.
+   ---------------------------------------------------------------------------
+   procedure Read_Stream_Info (Flac_File : in out File_Handle;
+                               Meta_Data :    out Headers.Meta_Data.T)
+     with
+       Relaxed_Initialization => Meta_Data,
+       Pre     => (Is_Open (Handle => Flac_File) and then
+                   Flac_File.Error = No_Error),
+       Post    => (case Flac_File.Error.Main is
                      when None =>
                        Is_Open (Handle => Flac_File) and then
                        Meta_Data'Initialized,
@@ -69,7 +90,8 @@ is
 
       if Error then
          Close (Flac_File => Flac_File);
-         Flac_File.Error := Not_A_Flac_File;
+         Flac_File.Error := Error_Type'(Main => Not_A_Flac_File,
+                                        Sub  => Corrupt_Meta_Data);
          return;
       end if;
 
@@ -80,9 +102,70 @@ is
 
       if Error then
          Close (Flac_File => Flac_File);
-         Flac_File.Error := Not_A_Flac_File;
+         Flac_File.Error := Error_Type'(Main => Not_A_Flac_File,
+                                        Sub  => Invalid_Meta_Data);
       end if;
    end Read_Metadata_Block;
+
+   ---------------------------------------------------------------------------
+   --  Read_Stream_Info
+   ---------------------------------------------------------------------------
+   procedure Read_Stream_Info (Flac_File : in out File_Handle;
+                               Meta_Data :    out Headers.Meta_Data.T)
+   is
+      Stream_Info_Raw : Headers.Stream_Info.Raw_T;
+      Stream_Info     : Headers.Stream_Info.T;
+      Error           : Boolean;
+      use type Types.Block_Type;
+      use type Types.Length_24;
+   begin
+      Read_Metadata_Block (Flac_File => Flac_File,
+                           Meta_Data => Meta_Data);
+
+      if Flac_File.Error.Main /= None then
+         return;
+      end if;
+
+      if
+        Meta_Data.Block_Type /= Types.Stream_Info or else
+        Meta_Data.Length /= Headers.Stream_Info.Raw_T'Length
+      then
+         Close (Flac_File => Flac_File);
+         Flac_File.Error := Error_Type'(Main => Not_A_Flac_File,
+                                        Sub  => Invalid_Meta_Data);
+         return;
+      end if;
+
+      SPARK_Stream_IO.Read (File  => Flac_File.File,
+                            Item  => Stream_Info_Raw,
+                            Error => Error);
+
+      if Error then
+         Close (Flac_File => Flac_File);
+         Flac_File.Error := Error_Type'(Main => Not_A_Flac_File,
+                                        Sub  => Corrupt_Stream_Info);
+         return;
+      end if;
+
+      Headers.Stream_Info.Convert
+        (Source           => Stream_Info_Raw,
+         Target           => Stream_Info,
+         Conversion_Error => Error);
+
+      if Error then
+         Close (Flac_File => Flac_File);
+         Flac_File.Error := Error_Type'(Main => Not_A_Flac_File,
+                                        Sub  => Invalid_Stream_Info);
+         return;
+      end if;
+
+      Flac_File.Properties :=
+        Stream_Properties'
+          (Num_Channels    => Positive (Stream_Info.Num_Channels),
+           Bits_Per_Sample => Positive (Stream_Info.Bits_Per_Sample),
+           Sample_Rate     => Positive (Stream_Info.Sample_Rate),
+           Num_Samples     => Interfaces.Unsigned_64 (Stream_Info.Total_Samples));
+   end Read_Stream_Info;
 
    ---------------------------------------------------------------------------
    --  Validate_Header
@@ -100,7 +183,8 @@ is
       --  Check header.
       if Error or else Header /= Headers.Stream then
          Close (Flac_File => Flac_File);
-         Flac_File.Error := Not_A_Flac_File;
+         Flac_File.Error := Error_Type'(Main => Not_A_Flac_File,
+                                        Sub  => Header_Not_Found);
       end if;
    end Validate_Header;
 
@@ -119,14 +203,8 @@ is
    procedure Open (File      : in     String;
                    Flac_File : in out File_Handle)
    is
-      Meta_Data       : Headers.Meta_Data.T;
-      Stream_Info_Raw : Headers.Stream_Info.Raw_T;
-      Error           : Boolean;
-
-      use type Ada.Streams.Stream_Element_Array;
-      use type Ada.Streams.Stream_Element_Offset;
-      use type Types.Block_Type;
-      use type Types.Length_24;
+      Meta_Data : Headers.Meta_Data.T;
+      Error     : Boolean;
    begin
       --  Try opening the actual file.
       SPARK_Stream_IO.Open (File  => Flac_File.File,
@@ -134,68 +212,28 @@ is
                             Error => Error);
 
       if Error then
-         Flac_File.Error := Open_Error;
+         Flac_File.Error := Error_Type'(Main => Open_Error,
+                                        Sub  => None);
          return;
       end if;
 
       Flac_File.Open  := True; --  For precondition of "Close" below.
-      Flac_File.Error := None;
+      Flac_File.Error := No_Error;
 
       Validate_Header (Flac_File => Flac_File);
 
-      if Flac_File.Error /= None then
+      if Flac_File.Error /= No_Error then
          return;
       end if;
 
       --  Header check went fine, now we should go for the first Stream_Info
       --  meta data block.  This is mandatory according to the spec.
-      Read_Metadata_Block (Flac_File => Flac_File,
-                           Meta_Data => Meta_Data);
+      Read_Stream_Info (Flac_File => Flac_File,
+                        Meta_Data => Meta_Data);
 
-      if Flac_File.Error /= None then
+      if Flac_File.Error /= No_Error then
          return;
       end if;
-
-      if
-        Meta_Data.Block_Type /= Types.Stream_Info or else
-        Meta_Data.Length /= Headers.Stream_Info.Raw_T'Length
-      then
-         Close (Flac_File => Flac_File);
-         Flac_File.Error := Not_A_Flac_File;
-         return;
-      end if;
-
-      SPARK_Stream_IO.Read (File  => Flac_File.File,
-                            Item  => Stream_Info_Raw,
-                            Error => Error);
-
-      if Error then
-         Close (Flac_File => Flac_File);
-         Flac_File.Error := Not_A_Flac_File;
-         return;
-      end if;
-
-      declare
-         Stream_Info : Headers.Stream_Info.T;
-      begin
-         Headers.Stream_Info.Convert
-           (Source           => Stream_Info_Raw,
-            Target           => Stream_Info,
-            Conversion_Error => Error);
-
-         if Error then
-            Close (Flac_File => Flac_File);
-            Flac_File.Error := Not_A_Flac_File;
-            return;
-         end if;
-
-         Flac_File.Properties :=
-           Stream_Properties'
-             (Num_Channels    => Positive (Stream_Info.Num_Channels),
-              Bits_Per_Sample => Positive (Stream_Info.Bits_Per_Sample),
-              Sample_Rate     => Positive (Stream_Info.Sample_Rate),
-              Num_Samples     => Interfaces.Unsigned_64 (Stream_Info.Total_Samples));
-      end;
 
       --  There may be more meta data blocks.  For now, we just skip them.
       Skip_All_Meta_Data :
@@ -204,19 +242,22 @@ is
          use type Types.Block_Type;
       begin
          while not Meta_Data.Last loop
-            pragma Loop_Invariant (Get_Error (Handle => Flac_File) = None and then
-                                   Is_Open (Handle => Flac_File));
+            pragma
+              Loop_Invariant
+                (Get_Error (Handle => Flac_File) = No_Error and then
+                 Is_Open (Handle => Flac_File));
 
             Read_Metadata_Block (Flac_File => Flac_File,
                                  Meta_Data => Meta_Data);
 
-            if Flac_File.Error /= None then
+            if Flac_File.Error /= No_Error then
                return;
             end if;
 
             if Meta_Data.Block_Type = Types.Invalid then
                Close (Flac_File => Flac_File);
-               Flac_File.Error := Not_A_Flac_File;
+               Flac_File.Error := Error_Type'(Main => Not_A_Flac_File,
+                                              Sub  => Invalid_Meta_Data);
                return;
             end if;
 
@@ -227,7 +268,8 @@ is
 
             if Error then
                Close (Flac_File => Flac_File);
-               Flac_File.Error := Not_A_Flac_File;
+               Flac_File.Error := Error_Type'(Main => Not_A_Flac_File,
+                                              Sub  => Corrupt_Meta_Data);
                return;
             end if;
          end loop;

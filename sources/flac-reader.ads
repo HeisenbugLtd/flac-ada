@@ -23,13 +23,11 @@ package Flac.Reader with
   SPARK_Mode => On
 is
 
-   type Error_Type is (None, Open_Error, Not_A_Flac_File);
-
    type File_Handle is limited private
      with
        Default_Initial_Condition =>
          (not Is_Open (File_Handle) and
-          Get_Error (File_Handle) = None);
+          Get_Error (File_Handle) = No_Error);
 
    ---------------------------------------------------------------------------
    --  Open
@@ -37,7 +35,7 @@ is
    procedure Open (File      : in     String;
                    Flac_File : in out File_Handle) with
      Pre  => not Is_Open (Handle => Flac_File),
-     Post => (case Get_Error (Flac_File) is
+     Post => (case Get_Error (Flac_File).Main is
                 when None =>
                   Is_Open (Handle => Flac_File),
                 when Open_Error | Not_A_Flac_File =>
@@ -112,7 +110,7 @@ private
       record
          File       : Ada.Streams.Stream_IO.File_Type;
          --  The associated file.
-         Error      : Error_Type := None;
+         Error      : Error_Type := No_Error;
          Open       : Boolean    := False;
          --  Status information.
          Properties : Stream_Properties;
