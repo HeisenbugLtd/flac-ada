@@ -47,6 +47,7 @@ begin
        (Flac.Reader.Get_Error (Handle => Test_File) = Flac.Reader.None);
    --  Expected result is an external dependency outside of SPARK.
 
+   pragma Warnings (Off, "no Global contract available for ""Put_Line""");
    GNAT.IO.Put_Line
      (S => "C:   " & Flac.Reader.Num_Channels (Handle => Test_File)'Image);
 
@@ -58,5 +59,6 @@ begin
 
    GNAT.IO.Put_Line
      (S => "SC:  " & Flac.Reader.Num_Samples (Handle => Test_File)'Image);
+   pragma Warnings (On, "no Global contract available for ""Put_Line""");
 
 end Simple_Test;
