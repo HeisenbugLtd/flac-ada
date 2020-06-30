@@ -32,8 +32,6 @@ is
    procedure Open (File      : in     String;
                    Flac_File : in out File_Handle)
    is
-      use type Ada.Streams.Stream_Element_Offset;
-
       Header          : Headers.Four_CC;
       Meta_Data_Raw   : Headers.Meta_Data.Raw_T;
       Stream_Info_Raw : Headers.Stream_Info.Raw_T;
@@ -51,11 +49,14 @@ is
 
       if Error then
          Flac_File.Error := Open_Error;
+         pragma Assert (Is_Valid (Handle => Flac_File));
+         pragma Assert (not SPARK_Stream_IO.Is_Open (File => Flac_File.File));
          return;
       end if;
 
       Flac_File.Open  := True; --  For precondition of "Close" below.
       Flac_File.Error := None;
+
       SPARK_Stream_IO.Read (File  => Flac_File.File,
                             Item  => Header,
                             Error => Error);
@@ -138,7 +139,9 @@ is
             use type Ada.Streams.Stream_IO.Count;
          begin
             while not Meta_Data.Last loop
-               pragma Loop_Invariant (Get_Error (Handle => Flac_File) = None);
+               pragma Loop_Invariant (Get_Error (Handle => Flac_File) = None and then
+                                      Is_Open (Handle => Flac_File) and then
+                                      Is_Valid (Handle => Flac_File));
                SPARK_Stream_IO.Read (File  => Flac_File.File,
                                      Item  => Meta_Data_Raw,
                                      Error => Error);
@@ -166,17 +169,23 @@ is
                   if Error then
                      Close (Flac_File => Flac_File);
                      Flac_File.Error := Not_A_Flac_File;
+                     pragma Assert (Is_Valid (Handle => Flac_File));
+                     pragma Assert (not Is_Open (Handle => Flac_File));
                      return;
                   end if;
                else
                   Close (Flac_File => Flac_File);
                   Flac_File.Error := Not_A_Flac_File;
+                  pragma Assert (Is_Valid (Handle => Flac_File));
+                  pragma Assert (not Is_Open (Handle => Flac_File));
                   return;
                end if;
             end loop;
          end Skip_All_Meta_Data;
       end;
 
+      pragma Assert (Is_Valid (Handle => Flac_File));
+      pragma Assert (Is_Open (Handle => Flac_File));
       Flac_File.Open := Flac_File.Error = None;
    end Open;
 
