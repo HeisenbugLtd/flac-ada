@@ -16,6 +16,7 @@ pragma License (Unrestricted);
 ------------------------------------------------------------------------------
 
 private with Ada.Streams.Stream_IO;
+private with SPARK_Stream_IO;
 with Interfaces;
 
 package Flac.Reader with
@@ -45,11 +46,11 @@ is
                    Flac_File : in out File_Handle) with
      Pre  => not Is_Open (Handle => Flac_File),
      Post => (Is_Valid (Handle => Flac_File) and then
-                  (case Get_Error (Flac_File) is
-                         when None =>
-                           Is_Open (Handle => Flac_File),
-                         when Open_Error | Not_A_Flac_File =>
-                           not Is_Open (Handle => Flac_File)));
+                (case Get_Error (Flac_File) is
+                    when None =>
+                       Is_Open (Handle => Flac_File),
+                    when Open_Error | Not_A_Flac_File =>
+                       not Is_Open (Handle => Flac_File)));
    --  FIXME: Properties need to be mentioned in the post condition.
    --  Opens a given file in FLAC format. Errors will be communicated via the
    --  returned File_Type.
@@ -134,7 +135,7 @@ private
    --  Is_Open
    ---------------------------------------------------------------------------
    function Is_Open (Handle : in File_Handle) return Boolean is
-     (Handle.Open);
+     (Handle.Open and then SPARK_Stream_IO.Is_Open (Handle.File));
 
    ---------------------------------------------------------------------------
    --  Is_Valid
