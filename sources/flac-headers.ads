@@ -12,7 +12,7 @@ pragma License (Unrestricted);
 --
 --  Headers
 --
---  Defines various file/frame headers of FLAC files.
+--  Defines various file headers of FLAC files.
 ------------------------------------------------------------------------------
 
 with Flac.Types;

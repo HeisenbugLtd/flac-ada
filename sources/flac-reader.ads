@@ -108,7 +108,7 @@ private
 
    type File_Handle is
       record
-         File       : Ada.Streams.Stream_IO.File_Type;
+         File        : Ada.Streams.Stream_IO.File_Type;
          --  The associated file.
          Error      : Error_Type := No_Error;
          Open       : Boolean    := False;

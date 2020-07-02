@@ -18,7 +18,8 @@ pragma License (Unrestricted);
 with Ada.Streams.Stream_IO;
 
 package SPARK_Stream_IO with
-  SPARK_Mode => On
+  Preelaborate => True,
+  SPARK_Mode   => On
 is
 
    package ASS renames Ada.Streams.Stream_IO;

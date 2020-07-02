@@ -15,142 +15,106 @@ package body FLAC.Headers.Stream_Info with
 is
 
    ---------------------------------------------------------------------------
-   --  BE_Swap
+   --  Read
    ---------------------------------------------------------------------------
-   function BE_Swap (Arg : in Raw_T) return Raw_T;
-
-   ---------------------------------------------------------------------------
-   --  BE_Swap
-   ---------------------------------------------------------------------------
-   function BE_Swap (Arg : in Raw_T) return Raw_T is
-      use type Ada.Streams.Stream_Element;
-      use type Ada.Streams.Stream_Element_Array;
-
-      function Low_Nibble
-        (Arg : in Ada.Streams.Stream_Element) return Ada.Streams.Stream_Element
-      is
-        (Arg and 16#0F#);
-
-      function High_Nibble
-        (Arg : in Ada.Streams.Stream_Element) return Ada.Streams.Stream_Element
-      is
-        ((Arg and 16#F0#) / 16);
-   begin
-      if Types.Needs_Swap then
-         --  First two 16 bit value for minimum and maximum block size.
-         return Raw_T'((1  => Arg (2),
-                        2  => Arg (1), --  Min_Block_Size
-                        3  => Arg (4),
-                        4  => Arg (3), --  Max_Block_Size
-                        --  Minimum and maximum frame size are 24 bit values.
-                        5  => Arg (7),
-                        6  => Arg (6),
-                        7  => Arg (5), --  Min_Frame_Size
-                        8  => Arg (10),
-                        9  => Arg (9),
-                        10 => Arg (8), --  Max_Frame_Size
-                        --  Now the fun part begins. Let's make a drawing:
-                        --                         .----------- Sample rate
-                        --                         |   .------- # channels
-                        --                         |   |     .- # bits/sample
-                        --   .----------------------. .-..----.
-                        --   |                      | | ||    |
-                        --  |....|....|....|....|....|....|....|....|...  ...|
-                        --  '---------'---------'---------'---------'---  ---'
-                        --   b11       b12       b13       b14       b15 ..
-                        11 => (16 * Low_Nibble (Arg (12)) or
-                                 High_Nibble (Arg (13))),
-                        12 => (16 * Low_Nibble (Arg (11)) or
-                                 High_Nibble (Arg (12))),
-                        13 => (High_Nibble (Arg (11))          or
-                                 (  8 * (Arg (13) and 16#0E#)) or
-                                 (128 * (High_Nibble (Arg (14)) and 16#01#))),
-                        14 => ((8 * Low_Nibble (Arg (13)) and 16#01#) or
-                                 (High_Nibble (Arg (14)) / 2) or
-                                 16 * Low_Nibble (Arg (18))),
-                        15 => ((16 * Low_Nibble (Arg (17))) or
-                                 High_Nibble (Arg (18))),
-                        16 => (16 * Low_Nibble (Arg (16)) or
-                                 High_Nibble (Arg (17))),
-                        17 => (16 * Low_Nibble (Arg (15)) or
-                                 High_Nibble (Arg (16))),
-                        18 => (16 * Low_Nibble (Arg (15))))
-                       & Arg (19 .. 34)); --  MD5 checksum
-      else
-         return Arg;
-      end if;
-   end BE_Swap;
-
-   type Full_T is
-      record
-         Min_Block_Size  : Types.Length_16; --  samples
-         Max_Block_Size  : Types.Length_16; --  samples!
-         Min_Frame_Size  : Types.Length_24; --  bytes
-         Max_Frame_Size  : Types.Length_24; --  bytes
-
-         --  Ok, whoever came up with these bit assignment should get whipped.
-         --  These are not even divisable by eight, so simple byte swapping
-         --  won't help.
-
-         Sample_Rate     : Types.Length_20;       --  20 bits, i.e. 2.5 bytes
-         Num_Channels    : Types.Channel_Count;   --  0 .. 7 => 1 .. 8
-         --  Another two nibbles crossing a byte boundary.
-         Bits_Per_Sample : Types.Bits_Per_Sample; --  3 .. 31 => 4 .. 32
-         Total_Samples   : Types.Sample_Count;    --  4.5 bytes.
-
-         --  And we're back in alignment.
-         MD5_Signature   : Types.MD5_Sum;
-      end record
-     with
-       Size        => 272,
-       Object_Size => 272,
-       Bit_Order   => System.Low_Order_First;
-   pragma Warnings (Off, "component clause forces biased representation for ""Bits_Per_Sample""");
-   pragma Warnings (Off, "component clause forces biased representation for ""Num_Channels""");
-   for Full_T use
-      record
-         Min_Block_Size  at 0 range   0 ..  15;
-         Max_Block_Size  at 0 range  16 ..  31;
-         Min_Frame_Size  at 0 range  32 ..  55;
-         Max_Frame_Size  at 0 range  56 ..  79;
-         Sample_Rate     at 0 range  80 ..  99;
-         Num_Channels    at 0 range 100 .. 102;
-         Bits_Per_Sample at 0 range 103 .. 107;
-         Total_Samples   at 0 range 108 .. 143;
-         MD5_Signature   at 0 range 144 .. 271;
-      end record;
-   pragma Warnings (On, "component clause forces biased representation for ""Bits_Per_Sample""");
-   pragma Warnings (On, "component clause forces biased representation for ""Num_Channels""");
-
-   function To_Full is new Ada.Unchecked_Conversion (Source => Raw_T,
-                                                     Target => Full_T);
-   pragma Annotate (GNATprove,
-                    Intentional,
-                    "type with constraints on bit representation",
-                    "We need this for now.");
-
-   procedure Convert (Source           : in     Raw_T;
-                      Target           :    out T;
-                      Conversion_Error :    out Boolean)
+   procedure Read (File  : in     Ada.Streams.Stream_IO.File_Type;
+                   Item  :    out T;
+                   Error :    out Boolean)
    is
-      Full_View : Full_T := To_Full (S => BE_Swap (Arg => Source));
-   begin
-      Conversion_Error :=
-        Full_View.Min_Block_Size not in Types.Block_Size or else
-        Full_View.Max_Block_Size not in Types.Block_Size or else
-        Full_View.Sample_Rate    not in Types.Sample_Rate;
+      Raw_Data : Ada.Streams.Stream_Element_Array (1 .. Stream_Info_Length);
 
-      if not Conversion_Error then
-         Target := T'(Min_Block_Size  => Full_View.Min_Block_Size,
-                      Max_Block_Size  => Full_View.Max_Block_Size,
-                      Min_Frame_Size  => Full_View.Min_Frame_Size,
-                      Max_Frame_Size  => Full_View.Max_Frame_Size,
-                      Sample_Rate     => Full_View.Sample_Rate,
-                      Num_Channels    => Full_View.Num_Channels,
-                      Bits_Per_Sample => Full_View.Bits_Per_Sample,
-                      Total_Samples   => Full_View.Total_Samples,
-                      MD5_Signature   => Full_View.MD5_Signature);
+      Min_Block_Raw       : Types.Block_Size'Base;
+      Max_Block_Raw       : Types.Block_Size'Base;
+      Sample_Rate_Raw     : Types.Sample_Rate'Base;
+      Bits_Per_Sample_Raw : Types.Bits_Per_Sample'Base;
+      use type Ada.Streams.Stream_Element;
+      use type Types.Bits_Per_Sample'Base;
+      use type Types.Block_Size'Base;
+      use type Types.Length_24'Base;
+      use type Types.Sample_Count'Base;
+      use type Types.Sample_Rate'Base;
+   begin
+      SPARK_Stream_IO.Read (File  => File,
+                            Item  => Raw_Data,
+                            Error => Error);
+
+      if Error then
+         return;
       end if;
-   end Convert;
+
+      --  <16> The minimum block size (in samples) used in the stream.
+      Min_Block_Raw :=
+        Types.Block_Size'Base (Raw_Data (1)) * 2 ** 8 +
+        Types.Block_Size'Base (Raw_Data (2));
+
+      --  <16> The maximum block size (in samples) used in the stream. (Minimum blocksize == maximum blocksize) implies a fixed-blocksize stream.
+      Max_Block_Raw :=
+        Types.Block_Size'Base (Raw_Data (3)) * 2 ** 8 +
+        Types.Block_Size'Base (Raw_Data (4));
+
+      Error :=
+        Min_Block_Raw not in Types.Block_Size or
+        Max_Block_Raw not in Types.Block_Size;
+
+      if Error then
+         return;
+      end if;
+
+      Item.Min_Block_Size := Min_Block_Raw;
+      Item.Max_Block_Size := Max_Block_Raw;
+
+      --  <24> The minimum frame size (in bytes) used in the stream. May be 0 to imply the value is not known.
+      Item.Min_Frame_Size :=
+        Types.Length_24 (Raw_Data (5)) * 2 ** 16 +
+        Types.Length_24 (Raw_Data (6)) * 2 ** 8 +
+        Types.Length_24 (Raw_Data (7));
+
+      --  <24> The maximum frame size (in bytes) used in the stream. May be 0 to imply the value is not known.
+      Item.Max_Frame_Size :=
+        Types.Length_24 (Raw_Data (8)) * 2 ** 16 +
+        Types.Length_24 (Raw_Data (9)) * 2 ** 8 +
+        Types.Length_24 (Raw_Data (10));
+
+      --  <20> Sample rate in Hz. Though 20 bits are available, the maximum sample rate is limited by the structure of frame headers to 655350Hz. Also, a value of 0 is invalid.
+      Sample_Rate_Raw :=
+        Types.Sample_Rate'Base (Raw_Data (11)) * 2 ** 12 + --  bits 19 .. 12
+        Types.Sample_Rate'Base (Raw_Data (12)) * 2 ** 4 +  --  bits 11 .. 4
+        Types.Sample_Rate'Base (Raw_Data (13) and 2#1111_0000#) / 2 ** 4; -- bits 3 .. 0
+
+      Error := Sample_Rate_Raw not in Types.Sample_Rate;
+
+      if Error then
+         return;
+      end if;
+
+      Item.Sample_Rate := Sample_Rate_Raw;
+
+      --  <3> 	(number of channels)-1. FLAC supports from 1 to 8 channels
+      Item.Num_Channels := Types.Channel_Count ((Raw_Data (13) and 2#0000_1110#) / 2 + 1);
+
+      --  <5> 	(bits per sample)-1. FLAC supports from 4 to 32 bits per sample. Currently the reference encoder and decoders only support up to 24 bits per sample.
+      Bits_Per_Sample_Raw :=
+        Types.Bits_Per_Sample'Base ((Raw_Data (13) and 2#0000_0001#) * 2 ** 4) +
+        Types.Bits_Per_Sample'Base ((Raw_Data (14) and 2#1111_0000#) / 2 ** 4) + 1;
+
+      Error := Bits_Per_Sample_Raw not in Types.Bits_Per_Sample;
+
+      if Error then
+         return;
+      end if;
+
+      Item.Bits_Per_Sample := Bits_Per_Sample_Raw;
+
+      --  <36> Total samples in stream. 'Samples' means inter-channel sample, i.e. one second of 44.1Khz audio will have 44100 samples regardless of the number of channels. A value of zero here means the number of total samples is unknown.
+      Item.Total_Samples :=
+        Types.Sample_Count (Raw_Data (14) and 2#0000_1111#) * 2 ** 32 +
+        Types.Sample_Count (Raw_Data (15))                  * 2 ** 24 +
+        Types.Sample_Count (Raw_Data (16))                  * 2 ** 16 +
+        Types.Sample_Count (Raw_Data (17))                  * 2 ** 8 +
+        Types.Sample_Count (Raw_Data (18));
+
+      --  <128> MD5 signature of the unencoded audio data. This allows the decoder to determine if an error exists in the audio data even when the error does not result in an invalid bitstream.
+      Item.MD5_Signature := Raw_Data (19 .. Raw_Data'Last);
+   end Read;
 
 end FLAC.Headers.Stream_Info;

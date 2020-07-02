@@ -15,15 +15,18 @@ pragma License (Unrestricted);
 --  The meta data block.
 ------------------------------------------------------------------------------
 
+with Ada.Streams.Stream_IO;
+with SPARK_Stream_IO;
+
 package FLAC.Headers.Meta_Data with
-  Pure       => True,
-  SPARK_Mode => On
+  Preelaborate => True,
+  SPARK_Mode   => On
 is
 
    --  METADATA_BLOCK_HEADER
-   --  <1> 	Last-metadata-block flag: '1' if this block is the last metadata block before the audio blocks, '0' otherwise.
-   --  <7> 	BLOCK_TYPE
-   --  
+   --  <1> Last-metadata-block flag: '1' if this block is the last metadata
+   --      block before the audio blocks, '0' otherwise.
+   --  <7> BLOCK_TYPE
    --      0 : STREAMINFO
    --      1 : PADDING
    --      2 : APPLICATION
@@ -33,8 +36,8 @@ is
    --      6 : PICTURE
    --      7-126 : reserved
    --      127 : invalid, to avoid confusion with a frame sync code
-   --  
-   --  <24> 	Length (in bytes) of metadata to follow (does not include the size of the METADATA_BLOCK_HEADER)
+   --  <24> Length (in bytes) of metadata to follow (does not include the size
+   --       of the METADATA_BLOCK_HEADER)
    type T is
        record
          Last       : Boolean;
@@ -42,15 +45,18 @@ is
          Length     : Types.Length_24;
       end record;
 
-   subtype Raw_T is Ada.Streams.Stream_Element_Array (1 .. 4)
-     with
-       Object_Size => 32;
+   Meta_Data_Length : constant := 32 / Ada.Streams.Stream_Element'Size;
 
-   procedure Convert (Source           : in     Raw_T;
-                      Target           :    out T;
-                      Conversion_Error :    out Boolean)
+   --------------------------------------------------------------------------
+   --  Read
+   ---------------------------------------------------------------------------
+   procedure Read (File  : in     Ada.Streams.Stream_IO.File_Type;
+                   Item  :    out T;
+                   Error :    out Boolean)
      with
-       Depends => (Target           => Source,
-                   Conversion_Error => Source);
+       Relaxed_Initialization => Item,
+       Pre     => SPARK_Stream_IO.Is_Open (File => File),
+       Post    => (if not Error then Item'Initialized),
+       Depends => ((Error, Item) => File);
 
 end FLAC.Headers.Meta_Data;

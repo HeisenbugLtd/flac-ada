@@ -7,7 +7,8 @@
 ------------------------------------------------------------------------------
 pragma License (Unrestricted);
 
-with Ada.Unchecked_Conversion;
+with Ada.Streams.Stream_IO;
+with SPARK_Stream_IO;
 with System;
 
 package body FLAC.Headers.Meta_Data with
@@ -19,70 +20,78 @@ is
        Size        => 7,
        Object_Size => 8;
 
-   type Full_T is
-      record
-         Last       : Boolean;
-         Block_Type : Unsigned_7;
-         Length     : Types.Length_24;
-      end record
+   ---------------------------------------------------------------------------
+   --  To_Block_Type
+   ---------------------------------------------------------------------------
+   procedure To_Block_Type (Source : in     Unsigned_7;
+                            Target :    out Types.Block_Type;
+                            Error  :    out Boolean)
      with
-       Size        => 32,
-       Object_Size => 32,
-       Bit_Order   => System.Low_Order_First;
-   for Full_T use
-      record
-         Last       at 0 range  7 .. 7;
-         Block_Type at 0 range  0 .. 6;
-         Length     at 0 range  8 .. 31;
-      end record;
+       Relaxed_Initialization => Target,
+       Depends => (Error  => Source,
+                   Target => Source),
+       Post    => (if not Error then Target'Initialized);
 
-   function To_Full is new Ada.Unchecked_Conversion (Source => Raw_T,
-                                                     Target => Full_T);
-
-   procedure Convert (Source           : in     Raw_T;
-                      Target           :    out T;
-                      Conversion_Error :    out Boolean)
+   ---------------------------------------------------------------------------
+   --  Read
+   ---------------------------------------------------------------------------
+   procedure Read (File  : in     Ada.Streams.Stream_IO.File_Type;
+                   Item  :    out T;
+                   Error :    out Boolean)
    is
-
-      procedure To_Block_Type (Source : in     Unsigned_7;
-                               Target :    out Types.Block_Type)
-        with
-          Relaxed_Initialization => Target,
-          Global  => (Output => Conversion_Error),
-          Depends => (Conversion_Error => Source,
-                      Target           => Source),
-          Post    => (if not Conversion_Error then Target'Initialized);
-
-      procedure To_Block_Type (Source : in     Unsigned_7;
-                               Target :    out Types.Block_Type)
-        with
-          SPARK_Mode => Off
-      is
-         function Raw_Convert is
-           new Ada.Unchecked_Conversion (Source => Unsigned_7,
-                                         Target => Types.Block_Type);
-
-         use type Types.Block_Type;
-      begin
-         Target := Raw_Convert (S => Source);
-
-         if not Target'Valid then
-            Target := Types.Padding; --  We ignore all of those, so pretend
-                                     --  they are just padding.
-         end if;
-
-         --  This one we should never read.  If we do the file is corrupt.
-         Conversion_Error := Target = Types.Invalid;
-      end To_Block_Type;
-
-      Full_View  : constant Full_T := To_Full (S => Source);
-      Block_Type : Types.Block_Type;
+      Raw_Data : Ada.Streams.Stream_Element_Array (1 .. Meta_Data_Length);
+      BT       : Types.Block_Type;
+      use type Ada.Streams.Stream_Element;
+      use type Types.Length_24;
    begin
-      To_Block_Type (Source => Full_View.Block_Type,
-                     Target => Block_Type);
-      Target := T'(Last       => Full_View.Last,
-                   Block_Type => Block_Type,
-                   Length     => Types.BE_Swap (Full_View.Length));
-   end Convert;
+      SPARK_Stream_IO.Read (File  => File,
+                            Item  => Raw_Data,
+                            Error => Error);
+
+      if Error then
+         return;
+      end if;
+
+      To_Block_Type (Source => Unsigned_7 (Raw_Data (1) and 2#0111_1111#),
+                     Target => BT,
+                     Error  => Error);
+
+      if Error then
+         return;
+      end if;
+
+      Item.Last := (Raw_Data (1) and 2#1000_0000#) /= 0;
+      Item.Block_Type := BT;
+      Item.Length :=
+        Types.Length_24 (Raw_Data (2)) * 256 ** 2 +
+        Types.Length_24 (Raw_Data (3)) * 256 +
+        Types.Length_24 (Raw_Data (4));
+   end Read;
+
+   ---------------------------------------------------------------------------
+   --  To_Block_Type
+   ---------------------------------------------------------------------------
+   procedure To_Block_Type (Source : in     Unsigned_7;
+                            Target :    out Types.Block_Type;
+                            Error  :    out Boolean)
+     with
+       SPARK_Mode => Off
+   is
+      function Raw_Convert is
+        new Ada.Unchecked_Conversion (Source => Unsigned_7,
+                                      Target => Types.Block_Type);
+
+      use type Types.Block_Type;
+   begin
+      Target := Raw_Convert (S => Source);
+
+      if not Target'Valid then
+         Target := Types.Padding; --  We ignore all of those, so pretend
+                                  --  they are just padding.
+      end if;
+
+      --  This one we should never read.  If we do the file is corrupt.
+      Error := Target = Types.Invalid;
+   end To_Block_Type;
 
 end FLAC.Headers.Meta_Data;

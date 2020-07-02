@@ -39,18 +39,12 @@ is
      with
        Annotate => (GNATprove, No_Wrap_Around);
 
-   function BE_Swap (Arg : in Length_16) return Length_16;
-
    subtype Block_Size is Length_16 range 16 .. Length_16'Last;
 
    type Length_24 is new --  24 bit
      Interfaces.Unsigned_32 range 0 .. 2 ** 24 - 1
        with
          Annotate => (GNATprove, No_Wrap_Around);
-
-   function BE_Swap (Arg : in Length_24) return Length_24
-     with
-       Inline => True;
 
    type Sample_Count is mod 2 ** 36 --  36 bit
      with
@@ -72,15 +66,9 @@ is
 
    type Channel_Count is range 1 .. 8;
    --  3 bit
-   --
-   --  Biased representation, 0 .. 7 maps to logical 1 .. 8
 
-   type Bits_Per_Sample is range 1 .. 32;
+   type Bits_Per_Sample is range 4 .. 32;
    --  5 bits
-   --
-   --  Careful, this is starting at 1 to avoid a wrong biased representation
-   --  (0 .. 31 maps to 1 .. 32), but officially the minimum number of bits
-   --  per sample is 4.
 
    --  BLOCK_TYPE
    --
@@ -119,19 +107,5 @@ is
                        Invalid        => 127);
 
    subtype MD5_Sum is Ada.Streams.Stream_Element_Array (0 .. 128 / 8 - 1);
-
-private
-
-   function BE_Swap (Arg : in Length_16) return Length_16 is
-     (if Needs_Swap
-      then Shift_Left (Arg, 8) or Shift_Right (Arg, 8)
-      else Arg);
-
-   function BE_Swap (Arg : in Length_24) return Length_24 is
-     (if Needs_Swap
-        then (Shift_Left (Arg and 16#0000FF#, 16) or
-              (Arg and 16#00FF00#)                or
-                Shift_Right (Arg and 16#FF0000#, 16))
-      else Arg);
 
 end Flac.Types;
