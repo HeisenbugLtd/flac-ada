@@ -8,6 +8,8 @@
 pragma License (Unrestricted);
 
 with Ada.Streams.Stream_IO;
+with Flac.Debug;
+with Flac.Frames;
 with Flac.Headers.Meta_Data;
 with Flac.Headers.Stream_Info;
 with Flac.Types;
@@ -135,11 +137,10 @@ is
       end if;
 
       Flac_File.Properties :=
-        Stream_Properties'
-          (Num_Channels    => Positive (Stream_Info.Num_Channels),
-           Bits_Per_Sample => Positive (Stream_Info.Bits_Per_Sample),
-           Sample_Rate     => Positive (Stream_Info.Sample_Rate),
-           Num_Samples     => Interfaces.Unsigned_64 (Stream_Info.Total_Samples));
+        Stream_Properties'(Num_Channels    => Stream_Info.Num_Channels,
+                           Bits_Per_Sample => Stream_Info.Bits_Per_Sample,
+                           Sample_Rate     => Stream_Info.Sample_Rate,
+                           Num_Samples     => Stream_Info.Total_Samples);
    end Read_Stream_Info;
 
    ---------------------------------------------------------------------------
@@ -249,6 +250,23 @@ is
             end if;
          end loop;
       end Skip_All_Meta_Data;
+
+      --  Now the file should be positioned at the first frame.
+      declare
+         Frame : Frames.T;
+      begin
+         Frames.Read (File        => Flac_File.File,
+                      Sample_Rate => Sample_Rate (Handle => Flac_File),
+                      Sample_Size => Bits_Per_Sample (Handle => Flac_File),
+                      Item        => Frame,
+                      Error       => Error);
+
+         if Error then
+            Flac.Debug.Print_Frame_Info (Frame => Frame);
+         else
+            Flac.Debug.Print_Frame_Info (Frame => Frame);
+         end if;
+      end;
    end Open;
 
 end Flac.Reader;

@@ -19,7 +19,7 @@ with Ada.Streams;
 with Interfaces;
 with System;
 
-private package Flac.Types with
+package Flac.Types with
   Pure       => True,
   SPARK_Mode => On
 is
@@ -47,6 +47,10 @@ is
          Annotate => (GNATprove, No_Wrap_Around);
 
    type Sample_Count is mod 2 ** 36 --  36 bit
+     with
+       Annotate => (GNATprove, No_Wrap_Around);
+
+   type Frame_Count is mod 2 ** 31 --  36 bit
      with
        Annotate => (GNATprove, No_Wrap_Around);
 

@@ -15,29 +15,34 @@ pragma License (Unrestricted);
 --  Defines various frame headers of FLAC files.
 ------------------------------------------------------------------------------
 
-with System;
+with Ada.Streams.Stream_IO;
+with Flac.CRC;
+with Flac.Headers.Stream_Info;
+with Flac.Types;
+with SPARK_Stream_IO;
 
-package Flac.Frames is
+package Flac.Frames with
+  SPARK_Mode => On
+is
 
-   --  <14> 	Sync code '11111111111110'
+   --  <14> Sync code '11_1111_1111_1110'
    type Sync_Code is mod 2 ** 14;
 
-   --  <1> 	Blocking strategy: [2] [3]
-   --  
+   --  <1> Blocking strategy:
    --      0 : fixed-blocksize stream; frame header encodes the frame number
    --      1 : variable-blocksize stream; frame header encodes the sample number
    type Blocking_Strategy is (Fixed, Variable);
    for Blocking_Strategy use (Fixed    => 0,
                               Variable => 1);
 
-   --  <4> 	Block size in inter-channel samples:
-   --  
-   --      0000 : reserved
-   --      0001 : 192 samples
+   --  <4> Block size in inter-channel samples:
+   --      0000      : reserved
+   --      0001      : 192 samples
    --      0010-0101 : 576 * (2^(n-2)) samples, i.e. 576/1152/2304/4608
-   --      0110 : get 8 bit (blocksize-1) from end of header
-   --      0111 : get 16 bit (blocksize-1) from end of header
-   --      1000-1111 : 256 * (2^(n-8)) samples, i.e. 256/512/1024/2048/4096/8192/16384/32768
+   --      0110      : get 8 bit (blocksize-1) from end of header
+   --      0111      : get 16 bit (blocksize-1) from end of header
+   --      1000-1111 : 256 * (2^(n-8)) samples, i.e. 256/512/1024/2048/4096/
+   --                  8192/16384/32768
    type Block_Size is (Reserved,
                        Samples_192,
                        Samples_576,
@@ -71,8 +76,7 @@ package Flac.Frames is
                        Samples_16384           => 2#1110#,
                        Samples_32768           => 2#1111#);
                        
-   --  <4> 	Sample rate:
-   --  
+   --  <4> Sample rate:
    --      0000 : get from STREAMINFO metadata block
    --      0001 : 88.2kHz
    --      0010 : 176.4kHz
@@ -122,20 +126,31 @@ package Flac.Frames is
                         Get_16_Bit_Ten_kHz_From_EOH => 2#1110#,
                         Invalid                     => 2#1111#);
 
-   --  <4> 	Channel assignment
-   --  
-   --      0000-0111 : (number of independent channels)-1. Where defined, the channel order follows SMPTE/ITU-R recommendations. The assignments are as follows:
-   --          1 channel: mono
-   --          2 channels: left, right
-   --          3 channels: left, right, center
-   --          4 channels: front left, front right, back left, back right
-   --          5 channels: front left, front right, front center, back/surround left, back/surround right
-   --          6 channels: front left, front right, front center, LFE, back/surround left, back/surround right
-   --          7 channels: front left, front right, front center, LFE, back center, side left, side right
-   --          8 channels: front left, front right, front center, LFE, back left, back right, side left, side right
-   --      1000 : left/side stereo: channel 0 is the left channel, channel 1 is the side(difference) channel
-   --      1001 : right/side stereo: channel 0 is the side(difference) channel, channel 1 is the right channel
-   --      1010 : mid/side stereo: channel 0 is the mid(average) channel, channel 1 is the side(difference) channel
+   --  <4> Channel assignment
+   --      0000-0111 : (number of independent channels)-1. Where defined, the
+   --                  channel order follows SMPTE/ITU-R recommendations. The
+   --                  assignments are as follows:
+   --                  1 channel : mono
+   --                  2 channels: left, right
+   --                  3 channels: left, right, center
+   --                  4 channels: front left, front right, back left,
+   --                              back right
+   --                  5 channels: front left, front right, front center,
+   --                              back/surround left, back/surround right
+   --                  6 channels: front left, front right, front center, LFE,
+   --                              back/surround left, back/surround right
+   --                  7 channels: front left, front right, front center, LFE,
+   --                              back center, side left, side right
+   --                  8 channels: front left, front right, front center, LFE,
+   --                              back left, back right, side left, side right
+   --      1000      : left/side stereo: channel 0 is the left channel, channel
+   --                                    1 is the side (difference) channel
+   --      1001      : right/side stereo: channel 0 is the side (difference)
+   --                                     channel, channel 1 is the right
+   --                                     channel
+   --      1010      : mid/side stereo: channel 0 is the mid (average) channel,
+   --                                   channel 1 is the side (difference)
+   --                                   channel
    --      1011-1111 : reserved
    type Channel_Assignment is (Mono,
                                L_R,
@@ -170,8 +185,7 @@ package Flac.Frames is
                                Reserved_1110             => 2#1110#,
                                Reserved_1111             => 2#1111#);
   
-   --  <3> 	Sample size in bits:
-   --  
+   --  <3> Sample size in bits:
    --      000 : get from STREAMINFO metadata block
    --      001 : 8 bits per sample
    --      010 : 12 bits per sample
@@ -198,28 +212,22 @@ package Flac.Frames is
                         Reserved_111         => 2#111#);
 
    --  FRAME_HEADER
-   --  <14> 	Sync code '11111111111110'
-   --  <1> 	Reserved: [1]
-   --  
+   --  <14> Sync code '11_1111_1111_1110'
+   --  <1> Reserved: [1]
    --      0 : mandatory value
    --      1 : reserved for future use
-   --  
-   --  <1> 	Blocking strategy: [2] [3]
-   --  
+   --  <1> Blocking strategy:
    --      0 : fixed-blocksize stream; frame header encodes the frame number
    --      1 : variable-blocksize stream; frame header encodes the sample number
-   --  
-   --  <4> 	Block size in inter-channel samples:
-   --  
-   --      0000 : reserved
-   --      0001 : 192 samples
+   --  <4> Block size in inter-channel samples:
+   --      0000      : reserved
+   --      0001      : 192 samples
    --      0010-0101 : 576 * (2^(n-2)) samples, i.e. 576/1152/2304/4608
-   --      0110 : get 8 bit (blocksize-1) from end of header
-   --      0111 : get 16 bit (blocksize-1) from end of header
-   --      1000-1111 : 256 * (2^(n-8)) samples, i.e. 256/512/1024/2048/4096/8192/16384/32768
-   --
-   --  <4> 	Sample rate:
-   --  
+   --      0110      : get 8 bit (blocksize-1) from end of header
+   --      0111      : get 16 bit (blocksize-1) from end of header
+   --      1000-1111 : 256 * (2^(n-8)) samples, i.e. 256/512/1024/2048/4096/
+   --                  8192/16384/32768
+   --  <4> Sample rate:
    --      0000 : get from STREAMINFO metadata block
    --      0001 : 88.2kHz
    --      0010 : 176.4kHz
@@ -236,25 +244,11 @@ package Flac.Frames is
    --      1101 : get 16 bit sample rate (in Hz) from end of header
    --      1110 : get 16 bit sample rate (in tens of Hz) from end of header
    --      1111 : invalid, to prevent sync-fooling string of 1s
-   --  
-   --  <4> 	Channel assignment
-   --  
-   --      0000-0111 : (number of independent channels)-1. Where defined, the channel order follows SMPTE/ITU-R recommendations. The assignments are as follows:
-   --          1 channel: mono
-   --          2 channels: left, right
-   --          3 channels: left, right, center
-   --          4 channels: front left, front right, back left, back right
-   --          5 channels: front left, front right, front center, back/surround left, back/surround right
-   --          6 channels: front left, front right, front center, LFE, back/surround left, back/surround right
-   --          7 channels: front left, front right, front center, LFE, back center, side left, side right
-   --          8 channels: front left, front right, front center, LFE, back left, back right, side left, side right
-   --      1000 : left/side stereo: channel 0 is the left channel, channel 1 is the side(difference) channel
-   --      1001 : right/side stereo: channel 0 is the side(difference) channel, channel 1 is the right channel
-   --      1010 : mid/side stereo: channel 0 is the mid(average) channel, channel 1 is the side(difference) channel
-   --      1011-1111 : reserved
-   --  
-   --  <3> 	Sample size in bits:
-   --  
+   --  <4> Channel assignment
+   --      0000-0111 : (number of independent channels)-1. Where defined, the
+   --                  channel order follows SMPTE/ITU-R recommendations. See
+   --                  above for the assignments.
+   --  <3> Sample size in bits:
    --      000 : get from STREAMINFO metadata block
    --      001 : 8 bits per sample
    --      010 : 12 bits per sample
@@ -263,50 +257,49 @@ package Flac.Frames is
    --      101 : 20 bits per sample
    --      110 : 24 bits per sample
    --      111 : reserved
-   --  
    --  <1> 	Reserved:
-   --  
    --      0 : mandatory value
    --      1 : reserved for future use
-   --  
-   --  <?> 	if(variable blocksize)
-   --     <8-56>:"UTF-8" coded sample number (decoded number is 36 bits) [4]
-   --  else
-   --     <8-48>:"UTF-8" coded frame number (decoded number is 31 bits) [4]
-   --  <?> 	if(blocksize bits == 011x)
-   --     8/16 bit (blocksize-1)
-   --  <?> 	if(sample rate bits == 11xx)
-   --     8/16 bit sample rate
-   --  <8> 	CRC-8 (polynomial = x^8 + x^2 + x^1 + x^0, initialized with 0) of everything before the crc, including the sync code
-   --  	NOTES
-   --  
-   --      This bit must remain reserved for 0 in order for a FLAC frame's initial 15 bits to be distinguishable from the start of an MPEG audio frame (see also).
-   --      The "blocking strategy" bit must be the same throughout the entire stream.
-   --      The "blocking strategy" bit determines how to calculate the sample number of the first sample in the frame. If the bit is 0 (fixed-blocksize), the frame header encodes the frame number as above, and the frame's starting sample number will be the frame number times the blocksize. If it is 1 (variable-blocksize), the frame header encodes the frame's starting sample number itself. (In the case of a fixed-blocksize stream, only the last block may be shorter than the stream blocksize; its starting sample number will be calculated as the frame number times the previous frame's blocksize, or zero if it is the first frame).
-   --      The "UTF-8" coding used for the sample/frame number is the same variable length code used to store compressed UCS-2, extended to handle larger input.
-   type Frame_Header is
+   --  <?> if (variable blocksize)
+   --        <8-56>:"UTF-8" coded sample number (decoded number is 36 bits)
+   --      else
+   --        <8-48>:"UTF-8" coded frame number (decoded number is 31 bits)
+   --  <?> if (blocksize bits == 011x)
+   --        8/16 bit (blocksize-1)
+   --  <?> if (sample rate bits == 11xx)
+   --        8/16 bit sample rate
+   --  <8> CRC-8 (polynomial = x^8 + x^2 + x^1 + x^0, initialized with 0) of
+   --      everything before the crc, including the sync code
+   type T (Blocking_Strategy : Frames.Blocking_Strategy := Fixed) is
       record
-         Sync_Code          : Frames.Sync_Code;
-         Reserved_0         : Boolean;
-         Blocking_Strategy  : Frames.Blocking_Strategy;
-         Block_Size         : Frames.Block_Size;
-         Sample_Rate        : Frames.Sample_Rate;
-         Channel_Assignment : Frames.Channel_Assignment;
-         Sample_Size        : Frames.Sample_Size;
-         Reserved_1         : Boolean;
-      end record
-     with
-       Bit_Order => System.Low_Order_First;
-   for Frame_Header use
-      record
-         Sync_Code          at 0 range  0 .. 13;
-         Reserved_0         at 0 range 14 .. 14;
-         Blocking_Strategy  at 0 range 15 .. 15;
-         Block_Size         at 0 range 16 .. 19;
-         Sample_Rate        at 0 range 20 .. 23;
-         Channel_Assignment at 0 range 24 .. 27;
-         Sample_Size        at 0 range 28 .. 30;
-         Reserved_1         at 0 range 31 .. 31;
+         Block_Size         : Types.Block_Size;
+         Sample_Rate        : Types.Sample_Rate;
+         Channel_Assignment : Types.Channel_Count;
+         Sample_Size        : Types.Bits_Per_Sample;
+
+         case Blocking_Strategy is
+            when Variable =>
+               Sample_Number : Types.Sample_Count; --  36 bits
+            when Fixed =>
+               Frame_Number : Types.Frame_Count; --  31 bits
+         end case;
       end record;
   
+   ---------------------------------------------------------------------------
+   --  Read
+   ---------------------------------------------------------------------------
+   procedure Read (File        : in     Ada.Streams.Stream_IO.File_Type;
+                   Sample_Rate : in     Types.Sample_Rate;
+                   Sample_Size : in     Types.Bits_Per_Sample;
+                   Item        :    out T;
+                   Error       :    out Boolean)
+     with
+       Relaxed_Initialization => Item,
+       Global  => (Input => Flac.CRC.Constant_State),
+       Pre     => (SPARK_Stream_IO.Is_Open (File => File) and
+                   not Item'Constrained),
+       Post    => (if not Error then Item'Initialized),
+       Depends => (Error => (File, Flac.CRC.Constant_State),
+                   Item  => (File, Sample_Rate, Sample_Size, Item));
+
 end Flac.Frames;

@@ -21,7 +21,7 @@ with Ada.Unchecked_Conversion;
 with Interfaces;
 with System;
 
-private package Flac.Headers with
+package Flac.Headers with
   Pure       => True,
   SPARK_Mode => On
 is

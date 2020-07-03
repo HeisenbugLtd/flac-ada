@@ -10,31 +10,25 @@ pragma License (Unrestricted);
 ------------------------------------------------------------------------------
 --  FLAC/Ada
 --
---  Debug
---
---  Non-SPARK debugging stuff.
+--  CRC implementations
 ------------------------------------------------------------------------------
 
-with Flac.Reader;
-with Flac.Frames;
+with Ada.Streams;
+with Interfaces;
 
-package Flac.Debug with 
-  SPARK_Mode => On
+package Flac.CRC with
+  SPARK_Mode     => On,
+  Abstract_State => (Constant_State)
 is
 
-   ---------------------------------------------------------------------------
-   --  Print_Stream_Info
-   --
-   --  Print info about stream.
-   ---------------------------------------------------------------------------
-   procedure Print_Stream_Info (Handle : Flac.Reader.File_Handle) with
-     Pre => Flac.Reader.Is_Open (Handle);
+   type Checksum_8 is new Interfaces.Unsigned_8;
 
    ---------------------------------------------------------------------------
-   --  Print_Frame_Info
-   --
-   --  Print info about frame.
+   --  CRC8
    ---------------------------------------------------------------------------
-   procedure Print_Frame_Info (Frame : in Frames.T);
+   procedure CRC8 (CRC  : in out Checksum_8;
+                   Data : in     Ada.Streams.Stream_Element_Array) with
+     Global  => (Input => Constant_State),
+     Depends => (CRC => (CRC, Data, Constant_State));
 
-end Flac.Debug;
+end Flac.CRC;

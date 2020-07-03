@@ -16,8 +16,9 @@ pragma License (Unrestricted);
 ------------------------------------------------------------------------------
 
 private with Ada.Streams.Stream_IO;
-private with SPARK_Stream_IO;
+with Flac.Types;
 with Interfaces;
+private with SPARK_Stream_IO;
 
 package Flac.Reader with
   SPARK_Mode => On
@@ -67,7 +68,7 @@ is
    ---------------------------------------------------------------------------
    --  Num_Channels
    ---------------------------------------------------------------------------
-   function Num_Channels (Handle : in File_Handle) return Natural
+   function Num_Channels (Handle : in File_Handle) return Types.Channel_Count
      with
        Depends => (Num_Channels'Result => Handle),
        Pre     => Is_Open (Handle => Handle);
@@ -75,7 +76,8 @@ is
    ---------------------------------------------------------------------------
    --  Bits_Per_Sample
    ---------------------------------------------------------------------------
-   function Bits_Per_Sample (Handle : in File_Handle) return Natural
+   function Bits_Per_Sample
+     (Handle : in File_Handle) return Types.Bits_Per_Sample
      with
        Depends => (Bits_Per_Sample'Result => Handle),
        Pre     => Is_Open (Handle => Handle);
@@ -83,7 +85,7 @@ is
    ---------------------------------------------------------------------------
    --  Sample_Rate
    ---------------------------------------------------------------------------
-   function Sample_Rate (Handle : in File_Handle) return Natural
+   function Sample_Rate (Handle : in File_Handle) return Types.Sample_Rate
      with
        Depends => (Sample_Rate'Result => Handle),
        Pre     => Is_Open (Handle => Handle);
@@ -91,7 +93,7 @@ is
    ---------------------------------------------------------------------------
    --  Num_Samples
    ---------------------------------------------------------------------------
-   function Num_Samples (Handle : in File_Handle) return Interfaces.Unsigned_64
+   function Num_Samples (Handle : in File_Handle) return Types.Sample_Count
      with
        Depends => (Num_Samples'Result => Handle),
        Pre     => Is_Open (Handle => Handle);
@@ -100,10 +102,10 @@ private
 
    type Stream_Properties is
       record
-         Num_Channels    : Natural := 0; -- 1 .. 8
-         Bits_Per_Sample : Natural := 0; -- 4 .. 32
-         Sample_Rate     : Natural := 0; -- 1 .. 655350
-         Num_Samples     : Interfaces.Unsigned_64 := 0; --  actually 36 bits
+         Num_Channels    : Types.Channel_Count   := 1; -- 1 .. 8
+         Bits_Per_Sample : Types.Bits_Per_Sample := 4; -- 4 .. 32
+         Sample_Rate     : Types.Sample_Rate     := 1; -- 1 .. 655350
+         Num_Samples     : Types.Sample_Count    := 0; --  actually 36 bits
       end record;
 
    type File_Handle is
@@ -132,26 +134,29 @@ private
    ---------------------------------------------------------------------------
    --  Num_Channels
    ---------------------------------------------------------------------------
-   function Num_Channels (Handle : in File_Handle) return Natural is
-      (Handle.Properties.Num_Channels);
+   function Num_Channels
+     (Handle : in File_Handle) return Types.Channel_Count
+   is
+     (Handle.Properties.Num_Channels);
 
    ---------------------------------------------------------------------------
    --  Bits_Per_Sample
    ---------------------------------------------------------------------------
-   function Bits_Per_Sample (Handle : in File_Handle) return Natural is
+   function Bits_Per_Sample
+     (Handle : in File_Handle) return Types.Bits_Per_Sample
+   is
      (Handle.Properties.Bits_Per_Sample);
 
    ---------------------------------------------------------------------------
    --  Sample_Rate
    ---------------------------------------------------------------------------
-   function Sample_Rate (Handle : in File_Handle) return Natural is
-     (Handle.Properties.Sample_Rate);
+   function Sample_Rate (Handle : in File_Handle) return Types.Sample_Rate is
+     (Types.Sample_Rate (Handle.Properties.Sample_Rate));
 
    ---------------------------------------------------------------------------
    --  Num_Samples
    ---------------------------------------------------------------------------
-   function Num_Samples
-     (Handle : in File_Handle) return Interfaces.Unsigned_64
+   function Num_Samples (Handle : in File_Handle) return Types.Sample_Count
    is
      (Handle.Properties.Num_Samples);
 

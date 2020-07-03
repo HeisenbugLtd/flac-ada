@@ -33,4 +33,26 @@ package body Flac.Debug is
         (S => "SC:  " & Num_Samples (Handle => Handle)'Image);
    end Print_Stream_Info;
 
+   ---------------------------------------------------------------------------
+   --  Print_Frame_Info
+   --
+   --  Print info about frame.
+   ---------------------------------------------------------------------------
+   procedure Print_Frame_Info (Frame : in Frames.T)
+     with
+       SPARK_Mode => Off
+   is
+   begin
+      GNAT.IO.Put_Line
+        (S => "Blocking_Strategy(F) :" & Frame.Blocking_Strategy'Image);
+      GNAT.IO.Put_Line
+        (S => "Block_Size(F)        :" & Frame.Block_Size'Image);
+      GNAT.IO.Put_Line
+        (S => "Sample_Rate(F)       :" & Frame.Sample_Rate'Image);
+      GNAT.IO.Put_Line
+        (S => "Channel_Assignment(F):" & Frame.Channel_Assignment'Image);
+      GNAT.IO.Put_Line
+        (S => "Sample_Size(F)       :" & Frame.Sample_Size'Image);
+   end Print_Frame_Info;
+
 end Flac.Debug;
