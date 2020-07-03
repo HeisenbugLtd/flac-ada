@@ -276,6 +276,7 @@ is
          Sample_Rate        : Types.Sample_Rate;
          Channel_Assignment : Types.Channel_Count;
          Sample_Size        : Types.Bits_Per_Sample;
+         CRC_16             : Flac.CRC.Checksum_16;
 
          case Blocking_Strategy is
             when Variable =>
@@ -300,6 +301,10 @@ is
                    not Item'Constrained),
        Post    => (if not Error then Item'Initialized),
        Depends => (Error => (File, Flac.CRC.Constant_State),
-                   Item  => (File, Sample_Rate, Sample_Size, Item));
+                   Item  => (File,
+                             Sample_Rate,
+                             Sample_Size,
+                             Item,
+                             Flac.CRC.Constant_State));
 
 end Flac.Frames;

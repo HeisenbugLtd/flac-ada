@@ -7,9 +7,11 @@
 ------------------------------------------------------------------------------
 pragma License (Unrestricted);
 
-with GNAT.IO;
+with Ada.Text_IO;
 
-package body Flac.Debug is
+package body Flac.Debug with
+  SPARK_Mode => On
+is
 
    ---------------------------------------------------------------------------
    --  Print_Stream_Info
@@ -20,17 +22,14 @@ package body Flac.Debug is
    is
       use Flac.Reader;
    begin
-      GNAT.IO.Put_Line
-        (S => "C:   " & Num_Channels (Handle => Handle)'Image);
-
-      GNAT.IO.Put_Line
-        (S => "BPS: " & Bits_Per_Sample (Handle => Handle)'Image);
-
-      GNAT.IO.Put_Line
-        (S => "SR:  " & Sample_Rate (Handle => Handle)'Image);
-
-      GNAT.IO.Put_Line
-        (S => "SC:  " & Num_Samples (Handle => Handle)'Image);
+      Ada.Text_IO.Put_Line
+        (Item => "Channels(S)    :" & Num_Channels (Handle => Handle)'Image);
+      Ada.Text_IO.Put_Line
+        (Item => "Sample_Size(S) :" & Bits_Per_Sample (Handle => Handle)'Image);
+      Ada.Text_IO.Put_Line
+        (Item => "Sample_Rate(S) :" & Sample_Rate (Handle => Handle)'Image);
+      Ada.Text_IO.Put_Line
+        (Item => "Sample_Count(S):" & Num_Samples (Handle => Handle)'Image);
    end Print_Stream_Info;
 
    ---------------------------------------------------------------------------
@@ -43,16 +42,16 @@ package body Flac.Debug is
        SPARK_Mode => Off
    is
    begin
-      GNAT.IO.Put_Line
-        (S => "Blocking_Strategy(F) :" & Frame.Blocking_Strategy'Image);
-      GNAT.IO.Put_Line
-        (S => "Block_Size(F)        :" & Frame.Block_Size'Image);
-      GNAT.IO.Put_Line
-        (S => "Sample_Rate(F)       :" & Frame.Sample_Rate'Image);
-      GNAT.IO.Put_Line
-        (S => "Channel_Assignment(F):" & Frame.Channel_Assignment'Image);
-      GNAT.IO.Put_Line
-        (S => "Sample_Size(F)       :" & Frame.Sample_Size'Image);
+      Ada.Text_IO.Put_Line
+        (Item => "Blocking_Strategy(F) : " & Frame.Blocking_Strategy'Image);
+      Ada.Text_IO.Put_Line
+        (Item => "Block_Size(F)        :" & Frame.Block_Size'Image);
+      Ada.Text_IO.Put_Line
+        (Item => "Sample_Rate(F)       :" & Frame.Sample_Rate'Image);
+      Ada.Text_IO.Put_Line
+        (Item => "Channel_Assignment(F):" & Frame.Channel_Assignment'Image);
+      Ada.Text_IO.Put_Line
+        (Item => "Sample_Size(F)       :" & Frame.Sample_Size'Image);
    end Print_Frame_Info;
 
 end Flac.Debug;
